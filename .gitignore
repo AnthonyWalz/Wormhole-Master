@@ -1,0 +1,9 @@
+
+ALE-Core/
+GameBinaries/
+TorchBinaries/
+bin/
+obj/
+.svn/
+.git/
+.vs/
