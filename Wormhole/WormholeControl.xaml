@@ -33,6 +33,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Column="0" Grid.Row ="0" VerticalAlignment="Center" Text="Allow Faction Members (not working rn don't check)" Margin="5,7" Height="16"/>
             <CheckBox Name="AllowInFaction" Grid.Column="1" Grid.Row ="0" Margin="5" IsChecked="{Binding AllowInFaction}"/>
@@ -54,6 +55,8 @@
             <TextBox Name="Tick" Grid.Column="1" Grid.Row ="8" Margin="5" Text="{Binding Tick}"/>
             <TextBlock Grid.Column="0" Grid.Row ="9" VerticalAlignment="Center" Text="Overwrite Wormhole Beacons With Wormhole Name" Margin="5,6" Height="16"/>
             <CheckBox Name="BeaconOverwrite" Grid.Column="1" Grid.Row ="9" Margin="5" IsChecked="{Binding BeaconOverwrite}"/>
+            <TextBlock Grid.Column="0" Grid.Row ="10" VerticalAlignment="Center" Text="Respawn Player in Seat (WIP)" Margin="5,6" Height="16"/>
+            <CheckBox Name="PlayerRespawn" Grid.Column="1" Grid.Row ="10" Margin="5" IsChecked="{Binding PlayerRespawn}"/>
             <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="8">
                 <!-- Extra Space to use later -->
             </StackPanel>

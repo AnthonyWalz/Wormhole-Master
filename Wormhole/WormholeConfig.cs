@@ -4,7 +4,7 @@ using Torch;
 using Torch.Collections;
 
 namespace Wormhole {
-    public class WormholeConfig : ViewModel
+    public class Config : ViewModel
     {
         [XmlIgnore]
         public MtObservableList<Server> WormholeServer { get; } = new MtObservableList<Server>();
@@ -41,6 +41,7 @@ namespace Wormhole {
         private double _outOutsideRadiusGate = 500;
         private int _tick = 500;
         private bool _beaconOverwrite = true;
+        private bool _playerRespawn = true;
 
 
         public bool AllowInFaction { get => _allowInFaction; set => SetValue(ref _allowInFaction, value); }
@@ -55,5 +56,6 @@ namespace Wormhole {
         public double OutOutsideRadiusGate { get => _outOutsideRadiusGate; set => SetValue(ref _outOutsideRadiusGate, value); }
         public int Tick { get => _tick; set => SetValue(ref _tick, value); }
         public bool BeaconOverwrite { get => _beaconOverwrite; set => SetValue(ref _beaconOverwrite, value); }
+        public bool PlayerRespawn { get => _playerRespawn; set => SetValue(ref _playerRespawn, value); }   
     }
 }

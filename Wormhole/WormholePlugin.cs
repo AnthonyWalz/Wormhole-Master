@@ -39,8 +39,8 @@ namespace Wormhole
             private Control _control;
             public UserControl GetControl() => _control ?? (_control = new Control(this));
 
-            private Persistent<WormholeConfig> _config;
-            public WormholeConfig Config => _config?.Data;
+            private Persistent<Config> _config;
+            public Config Config => _config?.Data;
             public void Save() => _config.Save();
             public int ticknumber = 0;
 
@@ -59,7 +59,7 @@ namespace Wormhole
 
                 try
                 {
-                    _config = Persistent<WormholeConfig>.Load(configFile);
+                    _config = Persistent<Config>.Load(configFile);
                 }
                 catch (Exception e)
                 {
@@ -71,7 +71,7 @@ namespace Wormhole
 
                     Log.Info("Create Default Config, because none was found!");
 
-                    _config = new Persistent<WormholeConfig>(configFile, new WormholeConfig());
+                    _config = new Persistent<Config>(configFile, new Config());
                     _config.Save();
                 }
 
@@ -168,7 +168,7 @@ namespace Wormhole
                                 {
                                     playerid = player.IdentityId;
                                 }
-                                if (GridManager.LoadGrid(file.FullName, new BoundingSphereD(new Vector3D(xgate, ygate, zgate), Config.OutOutsideRadiusGate), Config.OutInsideRadiusGate, false, playerid, Config.KeepOriginalOwner, false) == GridImportResult.OK)
+                                if (GridManager.LoadGrid(file.FullName, new BoundingSphereD(new Vector3D(xgate, ygate, zgate), Config.OutOutsideRadiusGate), Config.OutInsideRadiusGate, false, playerid, Config.KeepOriginalOwner, Config.PlayerRespawn, false) == GridImportResult.OK)
                                 {
                                     file.Delete();
                                 }

@@ -8,11 +8,13 @@ using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.ModAPI;
+using Torch;
 using Torch.Mod;
 using Torch.Mod.Messages;
 using VRage;
 using VRage.Game;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Ingame;
 using VRage.ObjectBuilders;
 using VRageMath;
@@ -23,6 +25,8 @@ namespace Wormhole.GridExport
 
     public class GridManager
     {
+        private Persistent<Config> _config;
+        public Config Config => _config?.Data;
 
         public static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -109,7 +113,7 @@ namespace Wormhole.GridExport
 
             return MyObjectBuilderSerializer.SerializeXML(path, false, builderDefinition);
         }
-        public static GridImportResult LoadGrid(string path, BoundingSphereD position, double cutout, bool keepOriginalLocation, long playerid, bool KeepOriginalOwner, bool force = false)
+        public static GridImportResult LoadGrid(string path, BoundingSphereD position, double cutout, bool keepOriginalLocation, long playerid, bool KeepOriginalOwner, bool PlayerRespawn, bool force = false)
         {
 
             if (!File.Exists(path))
@@ -128,7 +132,7 @@ namespace Wormhole.GridExport
 
                 foreach (var shipBlueprint in shipBlueprints)
                 {
-                    GridImportResult result = LoadShipBlueprint(shipBlueprint, position, cutout, keepOriginalLocation, playerid, KeepOriginalOwner, force);
+                    GridImportResult result = LoadShipBlueprint(shipBlueprint, position, cutout, keepOriginalLocation, playerid, KeepOriginalOwner, PlayerRespawn, force);
 
                     if (result != GridImportResult.OK)
                     {
@@ -145,7 +149,7 @@ namespace Wormhole.GridExport
             return GridImportResult.UNKNOWN_ERROR;
         }
 
-        private static GridImportResult LoadShipBlueprint(MyObjectBuilder_ShipBlueprintDefinition shipBlueprint, BoundingSphereD position, double cutout, bool keepOriginalLocation, long playerid, bool KeepOriginalOwner, bool force = false)
+        private static GridImportResult LoadShipBlueprint(MyObjectBuilder_ShipBlueprintDefinition shipBlueprint, BoundingSphereD position, double cutout, bool keepOriginalLocation, long playerid, bool KeepOriginalOwner, bool PlayerRespawn, bool force = false)
         {
 
             var grids = shipBlueprint.CubeGrids;
@@ -205,7 +209,7 @@ namespace Wormhole.GridExport
                     {
                         if (cockpit.Pilot != null)
                         {
-                            if (PlayerUtils.GetIdentityByNameOrId(cockpit.Pilot.PlayerSteamId.ToString()) != null)
+                            if (PlayerUtils.GetIdentityByNameOrId(cockpit.Pilot.PlayerSteamId.ToString()) != null && PlayerRespawn)
                             {
                                 var player = PlayerUtils.GetIdentityByNameOrId(cockpit.Pilot.PlayerSteamId.ToString());
                                 cockpit.Pilot.OwningPlayerIdentityId = player.IdentityId;
