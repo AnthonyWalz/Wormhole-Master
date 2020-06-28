@@ -6,7 +6,6 @@ using NLog;
 using Sandbox;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Character;
 using Sandbox.ModAPI;
 using Torch;
 using Torch.Mod;
@@ -14,8 +13,6 @@ using Torch.Mod.Messages;
 using VRage;
 using VRage.Game;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI;
-using VRage.Game.ModAPI.Ingame;
 using VRage.ObjectBuilders;
 using VRageMath;
 using Wormhole.Utils;
@@ -54,7 +51,7 @@ namespace Wormhole.GridExport
 
             definition.Id = new MyDefinitionId(new MyObjectBuilderType(typeof(MyObjectBuilder_ShipBlueprintDefinition)), filename);
             definition.CubeGrids = objectBuilders.Select(x => (MyObjectBuilder_CubeGrid)x.Clone()).ToArray();
-
+            List<ulong> playerIds = new List<ulong>();
             /* Reset ownership as it will be different on the new server anyway */
             foreach (MyObjectBuilder_CubeGrid cubeGrid in definition.CubeGrids)
             {
@@ -78,42 +75,26 @@ namespace Wormhole.GridExport
                         if (cockpit.Pilot != null)
                         {
                             var playersteam = cockpit.Pilot.PlayerSteamId;
+                            var player = PlayerUtils.GetIdentityByNameOrId(playersteam.ToString());
+                            playerIds.Add(playersteam);
                             ModCommunication.SendMessageTo(new JoinServerMessage(ip), playersteam);
                         }
-                        /*
-                        if (cockpit.ComponentContainer != null)
-                        {
-
-                            var components = cockpit.ComponentContainer.Components;
-
-                            if (components != null)
-                            {
-
-                                for (int i = components.Count - 1; i >= 0; i--)
-                                {
-
-                                    var component = components[i];
-
-                                    if (component.TypeId == "MyHierarchyComponentBase")
-                                    {
-                                        components.RemoveAt(i);
-                                        continue;
-                                    }
-                                }
-                          
-                            }
-                        }
-                        */
                     }
                 }
             }
 
             MyObjectBuilder_Definitions builderDefinition = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Definitions>();
             builderDefinition.ShipBlueprints = new MyObjectBuilder_ShipBlueprintDefinition[] { definition };
-
+            foreach(var playerId in playerIds)
+            {
+                var player = PlayerUtils.GetIdentityByNameOrId(playerId.ToString());
+                player.Character.EnableBag(false);
+                Sandbox.Game.MyVisualScriptLogicProvider.SetPlayersHealth(player.IdentityId, 0);
+                player.Character.Delete();
+            }
             return MyObjectBuilderSerializer.SerializeXML(path, false, builderDefinition);
         }
-        public static GridImportResult LoadGrid(string path, BoundingSphereD position, double cutout, bool keepOriginalLocation, long playerid, bool KeepOriginalOwner, bool PlayerRespawn, bool force = false)
+        public static GridImportResult LoadGrid(string path, BoundingSphereD position, double cutout, bool keepOriginalLocation, long playerid, bool KeepOriginalOwner, bool PlayerRespawn, string ThisIp, bool force = false)
         {
 
             if (!File.Exists(path))
@@ -132,7 +113,7 @@ namespace Wormhole.GridExport
 
                 foreach (var shipBlueprint in shipBlueprints)
                 {
-                    GridImportResult result = LoadShipBlueprint(shipBlueprint, position, cutout, keepOriginalLocation, playerid, KeepOriginalOwner, PlayerRespawn, force);
+                    GridImportResult result = LoadShipBlueprint(shipBlueprint, position, cutout, keepOriginalLocation, playerid, KeepOriginalOwner, PlayerRespawn, ThisIp, force);
 
                     if (result != GridImportResult.OK)
                     {
@@ -149,7 +130,7 @@ namespace Wormhole.GridExport
             return GridImportResult.UNKNOWN_ERROR;
         }
 
-        private static GridImportResult LoadShipBlueprint(MyObjectBuilder_ShipBlueprintDefinition shipBlueprint, BoundingSphereD position, double cutout, bool keepOriginalLocation, long playerid, bool KeepOriginalOwner, bool PlayerRespawn, bool force = false)
+        private static GridImportResult LoadShipBlueprint(MyObjectBuilder_ShipBlueprintDefinition shipBlueprint, BoundingSphereD position, double cutout, bool keepOriginalLocation, long playerid, bool KeepOriginalOwner, bool PlayerRespawn, string ThisIp, bool force = false)
         {
 
             var grids = shipBlueprint.CubeGrids;
@@ -160,7 +141,6 @@ namespace Wormhole.GridExport
                 return GridImportResult.NO_GRIDS_IN_BLUEPRINT;
             }
             List<MyObjectBuilder_EntityBase> objectBuilderList = new List<MyObjectBuilder_EntityBase>(grids.ToList());
-
             if (!keepOriginalLocation)
             {
 
@@ -209,17 +189,22 @@ namespace Wormhole.GridExport
                     {
                         if (cockpit.Pilot != null)
                         {
+                            var player = PlayerUtils.GetIdentityByNameOrId(cockpit.Pilot.PlayerSteamId.ToString());
                             if (PlayerUtils.GetIdentityByNameOrId(cockpit.Pilot.PlayerSteamId.ToString()) != null && PlayerRespawn)
                             {
-                                var player = PlayerUtils.GetIdentityByNameOrId(cockpit.Pilot.PlayerSteamId.ToString());
                                 cockpit.Pilot.OwningPlayerIdentityId = player.IdentityId;
-                                MyAPIGateway.Multiplayer.Players.SetControlledEntity(cockpit.Pilot.PlayerSteamId, cockpit.Pilot as VRage.ModAPI.IMyEntity);
                                 if (player.Character != null)
                                 {
-                                    player.SetDead(true);
+                                    if (ThisIp != null && ThisIp != "") {
+                                        ModCommunication.SendMessageTo(new JoinServerMessage(ThisIp), player.Character.ControlSteamId);
+                                    }
+                                    player.Character.EnableBag(false);
+                                    Sandbox.Game.MyVisualScriptLogicProvider.SetPlayersHealth(player.IdentityId, 0);
                                     player.Character.Delete();
                                 }
+                                player.SavedCharacters.Clear();
                                 player.SavedCharacters.Add(cockpit.Pilot.EntityId);
+                                MyAPIGateway.Multiplayer.Players.SetControlledEntity(cockpit.Pilot.PlayerSteamId, cockpit.Pilot as VRage.ModAPI.IMyEntity);
                             }
                             else
                             {
@@ -244,10 +229,8 @@ namespace Wormhole.GridExport
             }
             else
             {
-
                 MyEntities.Load(objectBuilderList, out _);
             }
-
             return GridImportResult.OK;
         }
         private static bool UpdateGridsPosition(MyObjectBuilder_CubeGrid[] grids, Vector3D newPosition)
@@ -313,7 +296,16 @@ namespace Wormhole.GridExport
              */
 
             Random rand = new Random();
-            return MyEntities.FindFreePlace(position.RandomToUniformPointInSphereWithInnerCutout(rand.NextDouble(), rand.NextDouble(), rand.NextDouble(), cutout).GetValueOrDefault(), sphere.Radius + 50);
+            MyEntity safezone = null;
+            var entities = MyEntities.GetEntitiesInSphere(ref position);
+            foreach(MyEntity entity in entities)
+            {
+                if(entity is MySafeZone)
+                {
+                    safezone = entity;
+                }
+            }
+            return MyEntities.FindFreePlaceCustom(position.RandomToUniformPointInSphereWithInnerCutout(rand.NextDouble(), rand.NextDouble(), rand.NextDouble(), cutout).GetValueOrDefault(), sphere.Radius + 50, 20, 5, 1, 0, safezone);
         }
 
         private static BoundingSphereD FindBoundingSphere(MyObjectBuilder_CubeGrid[] grids)

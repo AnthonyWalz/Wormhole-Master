@@ -35,14 +35,17 @@ namespace Wormhole {
         private bool _exportProjectorGrids = false;
 
         private string _jumpDriveSubid = "LargeJumpDrive";
+        private string _thisIp = "";
 
         private double _inRadiusGate = 50;
         private double _outInsideRadiusGate = 100;
         private double _outOutsideRadiusGate = 500;
         private int _tick = 500;
-        private bool _beaconOverwrite = true;
         private bool _playerRespawn = true;
-
+        private bool _workWithAllJD = false;
+        private bool _dontNeedJD = false;
+        private bool _disableJD = false;
+        
 
         public bool AllowInFaction { get => _allowInFaction; set => SetValue(ref _allowInFaction, value); }
         public bool KeepOriginalOwner { get => _keepOriginalOwner; set => SetValue(ref _keepOriginalOwner, value); }
@@ -50,12 +53,15 @@ namespace Wormhole {
         public bool ExportProjectorBlueprints { get => _exportProjectorGrids; set => SetValue(ref _exportProjectorGrids, value); }
 
         public string JumpDriveSubid { get => _jumpDriveSubid; set => SetValue(ref _jumpDriveSubid, value); }
+        public string ThisIp { get => _thisIp; set => SetValue(ref _thisIp, value); }
 
         public double InRadiusGate { get => _inRadiusGate; set => SetValue(ref _inRadiusGate, value); }
         public double OutInsideRadiusGate { get => _outInsideRadiusGate; set => SetValue(ref _outInsideRadiusGate, value); }
         public double OutOutsideRadiusGate { get => _outOutsideRadiusGate; set => SetValue(ref _outOutsideRadiusGate, value); }
         public int Tick { get => _tick; set => SetValue(ref _tick, value); }
-        public bool BeaconOverwrite { get => _beaconOverwrite; set => SetValue(ref _beaconOverwrite, value); }
-        public bool PlayerRespawn { get => _playerRespawn; set => SetValue(ref _playerRespawn, value); }   
+        public bool PlayerRespawn { get => _playerRespawn; set => SetValue(ref _playerRespawn, value); }
+        public bool WorkWithAllJD { get => _workWithAllJD; set => SetValue(ref _workWithAllJD, value); }
+        public bool DontNeedJD { get => _dontNeedJD; set => SetValue(ref _dontNeedJD, value); }
+        public bool DisableJD { get => _disableJD; set => SetValue(ref _disableJD, value); }
     }
 }

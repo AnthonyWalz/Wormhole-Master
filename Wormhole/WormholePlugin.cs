@@ -3,7 +3,6 @@ using Wormhole.Utils;
 using NLog;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
-using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -15,14 +14,14 @@ using Torch.API.Plugins;
 using VRageMath;
 using VRage.Game;
 using VRage.Game.ModAPI;
-using Sandbox.Game.World;
-using Sandbox.Engine.Multiplayer;
 
 namespace Wormhole
 {       
     public class Server
     {
         public string Name { get; set; }
+        public string Description { get; set; }
+        public string HexColor { get; set; }
         public string IP { get; set; }
         public string InFolder { get; set; }
         public string OutFolder { get; set; }
@@ -56,7 +55,6 @@ namespace Wormhole
             {
                 base.Init(torch);
                 var configFile = Path.Combine(StoragePath, "Wormhole.cfg");
-
                 try
                 {
                     _config = Persistent<Config>.Load(configFile);
@@ -77,7 +75,7 @@ namespace Wormhole
 
                 Instance = this;
             }
-
+            
             public string CreatePath(string folder, string fileName)
             {
                 Directory.CreateDirectory(folder);
@@ -125,29 +123,53 @@ namespace Wormhole
                             var WormholeDrives = new List<IMyJumpDrive>();
                             var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
                             gts.GetBlocksOfType(WormholeDrives);
-                            if (WormholeDrives.Count > 0)
-                            {
-                                foreach (var WormholeDrive in WormholeDrives)
-                                {
-                                    if (WormholeDrive.OwnerId == playerInCharge.IdentityId && WormholeDrive.Enabled && WormholeDrive.CurrentStoredPower == WormholeDrive.MaxStoredPower && WormholeDrive.BlockDefinition.SubtypeId.ToString() == Config.JumpDriveSubid)
-                                    {
-                                        WormholeDrive.CurrentStoredPower = 0;
+                        if (Config.DontNeedJD)
+                        {
+                            List<MyCubeGrid> grids = GridFinder.FindGridList(grid.EntityId.ToString(), playerInCharge as MyCharacter, Config.IncludeConnectedGrids);
+                            if (grids == null) { return; }
+                            if (grids.Count == 0) { return; }
+                            var filename = playerInCharge.SteamUserId.ToString() + "_" + grid.GetFriendlyName() + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 
-                                        List<MyCubeGrid> grids = GridFinder.FindGridList(grid.EntityId.ToString(), playerInCharge as MyCharacter, Config.IncludeConnectedGrids);
-                                        if (grids == null) { return; }
-                                        if (grids.Count == 0) { return; }
-                                        var filename = playerInCharge.SteamUserId.ToString() + "_" + grid.EntityId.ToString() + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
-                                        if (GridManager.SaveGrid(CreatePath(outfile, filename), filename, ip, Config.KeepOriginalOwner, Config.ExportProjectorBlueprints, grids))
+                            Sandbox.Game.MyVisualScriptLogicProvider.CreateLightning(new Vector3D(xgate, ygate, zgate));
+                            if (GridManager.SaveGrid(CreatePath(outfile, filename), filename, ip, Config.KeepOriginalOwner, Config.ExportProjectorBlueprints, grids))
+                            {
+                                foreach (var delgrid in grids)
+                                {
+                                    delgrid.Delete();
+                                }
+                            }
+                        }
+                        else if (WormholeDrives.Count > 0)
+                        {
+                            foreach (var WormholeDrive in WormholeDrives)
+                            {
+                                if (WormholeDrive.OwnerId == playerInCharge.IdentityId && WormholeDrive.Enabled && WormholeDrive.CurrentStoredPower == WormholeDrive.MaxStoredPower && (WormholeDrive.BlockDefinition.SubtypeId.ToString() == Config.JumpDriveSubid || Config.WorkWithAllJD))
+                                {
+                                    WormholeDrive.CurrentStoredPower = 0;
+                                    if (Config.DisableJD)
+                                    {
+                                        foreach (var jd in WormholeDrives)
                                         {
+                                            jd.Enabled = false;
+                                        }
+                                    }
+                                    List<MyCubeGrid> grids = GridFinder.FindGridList(grid.EntityId.ToString(), playerInCharge as MyCharacter, Config.IncludeConnectedGrids);
+                                    if (grids == null) { return; }
+                                    if (grids.Count == 0) { return; }
+                                    var filename = playerInCharge.SteamUserId.ToString() + "_" + playerInCharge.DisplayName + "_" + grid.DisplayName + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+
+                                    Sandbox.Game.MyVisualScriptLogicProvider.CreateLightning(new Vector3D(xgate, ygate, zgate));
+                                    if (GridManager.SaveGrid(CreatePath(outfile, filename), filename, ip, Config.KeepOriginalOwner, Config.ExportProjectorBlueprints, grids))
+                                    {
                                         foreach (var delgrid in grids)
                                         {
                                             delgrid.Delete();
-                                        }
                                         }
                                     }
                                 }
                             }
                         }
+                    }
                     }
                 }
             }
@@ -168,8 +190,9 @@ namespace Wormhole
                                 {
                                     playerid = player.IdentityId;
                                 }
-                                if (GridManager.LoadGrid(file.FullName, new BoundingSphereD(new Vector3D(xgate, ygate, zgate), Config.OutOutsideRadiusGate), Config.OutInsideRadiusGate, false, playerid, Config.KeepOriginalOwner, Config.PlayerRespawn, false) == GridImportResult.OK)
+                                if (GridManager.LoadGrid(file.FullName, new BoundingSphereD(new Vector3D(xgate, ygate, zgate), Config.OutOutsideRadiusGate), Config.OutInsideRadiusGate, false, playerid, Config.KeepOriginalOwner, Config.PlayerRespawn, Config.ThisIp, false) == GridImportResult.OK)
                                 {
+                                    Sandbox.Game.MyVisualScriptLogicProvider.CreateLightning(new Vector3D(xgate, ygate, zgate));
                                     file.Delete();
                                 }
                             }
