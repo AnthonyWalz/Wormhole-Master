@@ -22,8 +22,6 @@ namespace Wormhole.GridExport
 
     public class GridManager
     {
-        private Persistent<Config> _config;
-        public Config Config => _config?.Data;
 
         public static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -202,6 +200,7 @@ namespace Wormhole.GridExport
                                     Sandbox.Game.MyVisualScriptLogicProvider.SetPlayersHealth(player.IdentityId, 0);
                                     player.Character.Delete();
                                 }
+                                player.PerformFirstSpawn();
                                 player.SavedCharacters.Clear();
                                 player.SavedCharacters.Add(cockpit.Pilot.EntityId);
                                 MyAPIGateway.Multiplayer.Players.SetControlledEntity(cockpit.Pilot.PlayerSteamId, cockpit.Pilot as VRage.ModAPI.IMyEntity);

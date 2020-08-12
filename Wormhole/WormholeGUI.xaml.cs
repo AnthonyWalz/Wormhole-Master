@@ -5,17 +5,17 @@ using System.Windows.Controls;
 
 namespace Wormhole {
 
-    public partial class Control : UserControl {
+    public partial class GUI : UserControl {
         private WormholePlugin Plugin { get; }
-        public Control() {
+        public GUI() {
             InitializeComponent();
         }
-        public Control(WormholePlugin plugin) : this() {
+        public GUI(WormholePlugin plugin) : this() {
             Plugin = plugin;
             DataContext = plugin.Config;
-            foreach (Server server in plugin.Config.WormholeServer.ToArray<Server>())
+            foreach (WormholeGate Wormhole in plugin.Config.WormholeGates.ToArray<WormholeGate>())
             {
-                Listservers.Items.Add(server);
+                Listservers.Items.Add(Wormhole);
             }
         }
 
@@ -25,17 +25,15 @@ namespace Wormhole {
         private void Add_OnClick(object sender, RoutedEventArgs e)
         {
             if (Xinput.Text != string.Empty && Yinput.Text != string.Empty && Zinput.Text != string.Empty) {
-                var newserver = new Server() { Name = Nameinput.Text, Description = Descriptioninput.Text, HexColor = HexColorinput.Text, IP = IPinput.Text, InFolder = Infileinput.Text, OutFolder = Outfileinput.Text, X = Convert.ToDouble(Xinput.Text), Y = Convert.ToDouble(Yinput.Text), Z = Convert.ToDouble(Zinput.Text) };
-                if (Plugin.Config.WormholeServer.IndexOf(newserver) < 0 && Listservers.Items.IndexOf(newserver) < 0)
+                var newserver = new WormholeGate() { Name = Nameinput.Text, Description = Descriptioninput.Text, HexColor = HexColorinput.Text, SendTo = SendToinput.Text, X = Convert.ToDouble(Xinput.Text), Y = Convert.ToDouble(Yinput.Text), Z = Convert.ToDouble(Zinput.Text) };
+                if (Plugin.Config.WormholeGates.IndexOf(newserver) < 0 && Listservers.Items.IndexOf(newserver) < 0)
                 {
-                    Plugin.Config.WormholeServer.Add(newserver);
+                    Plugin.Config.WormholeGates.Add(newserver);
                     Listservers.Items.Add(newserver);
                     Nameinput.Text = string.Empty;
                     Descriptioninput.Text = string.Empty;
                     HexColorinput.Text = string.Empty;
-                    IPinput.Text = string.Empty;
-                    Infileinput.Text = string.Empty;
-                    Outfileinput.Text = string.Empty;
+                    SendToinput.Text = string.Empty;
                     Xinput.Text = string.Empty;
                     Yinput.Text = string.Empty;
                     Zinput.Text = string.Empty;
@@ -44,23 +42,21 @@ namespace Wormhole {
         }
         private void Del_OnClick(object sender, RoutedEventArgs e)
         {
-            Plugin.Config.WormholeServer.Remove(Listservers.SelectedItem as Server);
+            Plugin.Config.WormholeGates.Remove(Listservers.SelectedItem as WormholeGate);
             Listservers.Items.Remove(Listservers.SelectedItem);
         }
 
         private void Edit_OnClick(object sender, RoutedEventArgs e)
         {
             if (Listservers.SelectedItem != null) { 
-                Nameinput.Text = (Listservers.SelectedItem as Server).Name;
-                Descriptioninput.Text = (Listservers.SelectedItem as Server).Description;
-                HexColorinput.Text = (Listservers.SelectedItem as Server).HexColor;
-                IPinput.Text = (Listservers.SelectedItem as Server).IP;
-                Infileinput.Text = (Listservers.SelectedItem as Server).InFolder;
-                Outfileinput.Text = (Listservers.SelectedItem as Server).OutFolder;
-                Xinput.Text = (Listservers.SelectedItem as Server).X.ToString();
-                Yinput.Text = (Listservers.SelectedItem as Server).Y.ToString();
-                Zinput.Text = (Listservers.SelectedItem as Server).Z.ToString();
-                Plugin.Config.WormholeServer.Remove(Listservers.SelectedItem as Server);
+                Nameinput.Text = (Listservers.SelectedItem as WormholeGate).Name;
+                Descriptioninput.Text = (Listservers.SelectedItem as WormholeGate).Description;
+                HexColorinput.Text = (Listservers.SelectedItem as WormholeGate).HexColor;
+                SendToinput.Text = (Listservers.SelectedItem as WormholeGate).SendTo;
+                Xinput.Text = (Listservers.SelectedItem as WormholeGate).X.ToString();
+                Yinput.Text = (Listservers.SelectedItem as WormholeGate).Y.ToString();
+                Zinput.Text = (Listservers.SelectedItem as WormholeGate).Z.ToString();
+                Plugin.Config.WormholeGates.Remove(Listservers.SelectedItem as WormholeGate);
                 Listservers.Items.Remove(Listservers.SelectedItem);
             }
         }

@@ -8,6 +8,8 @@ namespace Wormhole {
     {
         [XmlIgnore]
         public MtObservableList<Server> WormholeServer { get; } = new MtObservableList<Server>();
+        [XmlIgnore]
+        public MtObservableList<WormholeGate> WormholeGates { get; } = new MtObservableList<WormholeGate>();
 
         [XmlElement("WormholeServer")]
         public Server[] WormholeServer_xml
@@ -29,24 +31,51 @@ namespace Wormhole {
                 }
             }
         }
+        [XmlElement("WormholeGate")]
+        public WormholeGate[] WormholeGates_xml
+        {
+            get
+            {
+                return this.WormholeGates.ToArray<WormholeGate>();
+            }
+            set
+            {
+                this.WormholeGates.Clear();
+                if (value != null)
+                {
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        WormholeGate Wormhole = value[i];
+                        this.WormholeGates.Add(Wormhole);
+                    }
+                }
+            }
+        }
+
+        private bool _newVersion = false;
         private bool _allowInFaction = false;
         private bool _keepOriginalOwner = false;
         private bool _includeConnectedGrids = true;
         private bool _exportProjectorGrids = false;
 
-        private string _jumpDriveSubid = "LargeJumpDrive";
+        private string _jumpDriveSubid = "WormholeDrive";
         private string _thisIp = "";
 
+        private double _radiusGate = 180;
         private double _inRadiusGate = 50;
         private double _outInsideRadiusGate = 100;
         private double _outOutsideRadiusGate = 500;
-        private int _tick = 500;
+        private string _folder = "";
+        private int _tick = 50;
         private bool _playerRespawn = true;
         private bool _workWithAllJD = false;
         private bool _dontNeedJD = false;
         private bool _disableJD = false;
-        
+        private bool _autoSend = false;
 
+
+
+        public bool NewVersion { get => _newVersion; set => SetValue(ref _newVersion, value); }
         public bool AllowInFaction { get => _allowInFaction; set => SetValue(ref _allowInFaction, value); }
         public bool KeepOriginalOwner { get => _keepOriginalOwner; set => SetValue(ref _keepOriginalOwner, value); }
         public bool IncludeConnectedGrids { get => _includeConnectedGrids; set => SetValue(ref _includeConnectedGrids, value); }
@@ -55,13 +84,17 @@ namespace Wormhole {
         public string JumpDriveSubid { get => _jumpDriveSubid; set => SetValue(ref _jumpDriveSubid, value); }
         public string ThisIp { get => _thisIp; set => SetValue(ref _thisIp, value); }
 
+        public double RadiusGate { get => _radiusGate; set => SetValue(ref _radiusGate, value); }
         public double InRadiusGate { get => _inRadiusGate; set => SetValue(ref _inRadiusGate, value); }
         public double OutInsideRadiusGate { get => _outInsideRadiusGate; set => SetValue(ref _outInsideRadiusGate, value); }
         public double OutOutsideRadiusGate { get => _outOutsideRadiusGate; set => SetValue(ref _outOutsideRadiusGate, value); }
+        public string Folder { get => _folder; set => SetValue(ref _folder, value); }
+
         public int Tick { get => _tick; set => SetValue(ref _tick, value); }
         public bool PlayerRespawn { get => _playerRespawn; set => SetValue(ref _playerRespawn, value); }
         public bool WorkWithAllJD { get => _workWithAllJD; set => SetValue(ref _workWithAllJD, value); }
         public bool DontNeedJD { get => _dontNeedJD; set => SetValue(ref _dontNeedJD, value); }
         public bool DisableJD { get => _disableJD; set => SetValue(ref _disableJD, value); }
+        public bool AutoSend { get => _autoSend; set => SetValue(ref _autoSend, value); }
     }
 }

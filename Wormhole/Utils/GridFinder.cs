@@ -60,12 +60,6 @@ namespace Wormhole.Utils {
 
             return grids;
         }
-
-        internal static List<MyCubeGrid> FindGridList(string gridName, MyCharacter character, object includeConnectedGrids)
-        {
-            throw new NotImplementedException();
-        }
-
         private static bool IsPlayerIdCorrect(long playerId, List<MyCubeGrid> gridList) {
 
             MyCubeGrid biggestGrid = null;
