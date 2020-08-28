@@ -89,13 +89,19 @@ namespace Wormhole
                 radius = (float)Plugin.Config.RadiusGate;
             }
             var entities = MyEntities.GetEntities();
-            foreach (MyEntity entity in entities)
+            if (entities != null)
             {
-                if (entity is MySafeZone)
+                foreach (MyEntity entity in entities)
                 {
-                    if (entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-SafeZone]"))
+                    if (entity != null)
                     {
-                        entity.Close();
+                        if (entity is MySafeZone)
+                        {
+                            if (entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-SafeZone]"))
+                            {
+                                entity.Close();
+                            }
+                        }
                     }
                 }
             }
@@ -126,13 +132,19 @@ namespace Wormhole
             try
             {
                 var entities = MyEntities.GetEntities();
-                foreach (MyEntity entity in entities)
+                if (entities != null)
                 {
-                    if (entity is MyCubeGrid)
+                    foreach (MyEntity entity in entities)
                     {
-                        if (entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]"))
+                        if (entity != null)
                         {
-                            entity.Close();
+                            if (entity is MyCubeGrid)
+                            {
+                                if (entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]"))
+                                {
+                                    entity.Close();
+                                }
+                            }
                         }
                     }
                 }

@@ -119,7 +119,6 @@ namespace Wormhole.GridExport
                         return result;
                     }
                 }
-
                 return GridImportResult.OK;
             }
 
