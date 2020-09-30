@@ -1,6 +1,4 @@
-﻿using Wormhole.GridExport;
-using Wormhole.Utils;
-using NLog;
+﻿using NLog;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.ModAPI;
@@ -20,25 +18,9 @@ using Sandbox.Common.ObjectBuilders;
 using Torch.Mod;
 using Torch.Mod.Messages;
 using Sandbox.Game.World;
-using System.Runtime.InteropServices.ComTypes;
-using VRage.Game.Entity;
-using VRage.ModAPI;
-using VRage.Utils;
 
 namespace Wormhole
 {
-    public class Server
-    {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string HexColor { get; set; }
-        public string IP { get; set; }
-        public string InFolder { get; set; }
-        public string OutFolder { get; set; }
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Z { get; set; }
-    }
     public class WormholeGate
     {
         public string Name { get; set; }
@@ -48,6 +30,7 @@ namespace Wormhole
         public double X { get; set; }
         public double Y { get; set; }
         public double Z { get; set; }
+        public bool Rand { get; set; }
     }
     public class Request
     {
@@ -57,18 +40,17 @@ namespace Wormhole
     }
     public class WormholePlugin : TorchPluginBase, IWpfPlugin, ITorchPlugin
     {
-
         public static WormholePlugin Instance { get; private set; }
         public static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         private GUI _control;
         public UserControl GetControl() => _control ?? (_control = new GUI(this));
-
         private Persistent<Config> _config;
         public Config Config => _config?.Data;
         public void Save() => _config.Save();
         public int tick = 0;
-        private string admingatesfolder = "admingates";
+        public string admingatesfolder = "admingates";
+        public string admingatesconfirmfolder = "admingatesconfirm";
         public override void Init(ITorchBase torch)
         {
             base.Init(torch);
@@ -93,12 +75,6 @@ namespace Wormhole
 
             Instance = this;
         }
-
-        public string CreatePath(string folder, string fileName)
-        {
-            Directory.CreateDirectory(folder);
-            return Path.Combine(folder, fileName + ".sbc");
-        }
         public override void Update()
         {
             base.Update();
@@ -107,21 +83,10 @@ namespace Wormhole
                 tick = 0;
                 try
                 {
-                    if (Config.NewVersion)
+                    foreach (WormholeGate wormhole in Config.WormholeGates)
                     {
-                        foreach (WormholeGate wormhole in Config.WormholeGates)
-                        {
-                            Wormholetransferout(wormhole.Name.Trim(), wormhole.SendTo, wormhole.X, wormhole.Y, wormhole.Z);
-                            Wormholetransferin(wormhole.Name.Trim(), wormhole.X, wormhole.Y, wormhole.Z);
-                        }
-                    }
-                    else
-                    {
-                        foreach (Server server in Config.WormholeServer)
-                        {
-                            Outboundwormhole(server.IP, server.OutFolder, server.X, server.Y, server.Z);
-                            Inboundwormhole(server.InFolder, server.X, server.Y, server.Z);
-                        }
+                        Wormholetransferout(wormhole.SendTo, wormhole.X, wormhole.Y, wormhole.Z);
+                        Wormholetransferin(wormhole.Name.Trim(), wormhole.X, wormhole.Y, wormhole.Z);
                     }
                 }
                 catch (Exception e)
@@ -130,29 +95,21 @@ namespace Wormhole
                 }
             }
         }
+        public string CreatePath(string folder, string fileName)
+        {
+            Directory.CreateDirectory(folder);
+            return Path.Combine(folder, fileName + ".sbc");
+        }
         public bool HasRightToMove(IMyPlayer player, MyCubeGrid grid)
         {
-            var result = player.GetRelationTo(OwnershipUtils.GetOwner(grid)) == MyRelationsBetweenPlayerAndBlock.Owner;
+            var result = player.GetRelationTo(Utilities.GetOwner(grid)) == MyRelationsBetweenPlayerAndBlock.Owner;
             if (Config.AllowInFaction && !result)
             {
-                result = player.GetRelationTo(OwnershipUtils.GetOwner(grid)) == MyRelationsBetweenPlayerAndBlock.FactionShare;
+                result = player.GetRelationTo(Utilities.GetOwner(grid)) == MyRelationsBetweenPlayerAndBlock.FactionShare;
             }
             return result;
         }
-        public string LegalCharOnly(string text)
-        {
-            string legallist = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
-            string temp = "";
-            foreach (char character in text)
-            {
-                if (legallist.IndexOf(character) != -1)
-                {
-                    temp = temp + character;
-                }
-            }
-            return temp;
-        }
-        public void Wormholetransferout(string name, string sendto, double xgate, double ygate, double zgate)
+        public void Wormholetransferout(string sendto, double xgate, double ygate, double zgate)
         {
             Vector3D gatepoint = new Vector3D(xgate, ygate, zgate);
             BoundingSphereD gate = new BoundingSphereD(gatepoint, Config.RadiusGate);
@@ -163,7 +120,6 @@ namespace Wormhole
                 {
 
                     var WormholeDrives = new List<IMyJumpDrive>();
-                    Log.Warn("test a");
                     var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
                     gts.GetBlocksOfType(WormholeDrives);
                     if (WormholeDrives.Count > 0)
@@ -228,7 +184,7 @@ namespace Wormhole
                                                     DisablingWormholeDrive.Enabled = false;
                                                 }
                                             }
-                                            List<MyCubeGrid> grids = GridFinder.FindGridList(grid.EntityId.ToString(), playerInCharge as MyCharacter, Config.IncludeConnectedGrids);
+                                            List<MyCubeGrid> grids = Utilities.FindGridList(grid.EntityId.ToString(), playerInCharge as MyCharacter, Config.IncludeConnectedGrids);
                                             if (grids == null) { return; }
                                             if (grids.Count == 0) { return; }
                                             Sandbox.Game.MyVisualScriptLogicProvider.CreateLightning(gatepoint);
@@ -251,12 +207,12 @@ namespace Wormhole
                                             else
                                             {
                                                 var destination = pickeddestination.Split(':');
-                                                var filename = destination[0] + "_" + playerInCharge.SteamUserId.ToString() + "_" + LegalCharOnly(playerInCharge.DisplayName) + "_" + LegalCharOnly(grid.DisplayName) + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+                                                var filename = destination[0] + "_" + playerInCharge.SteamUserId.ToString() + "_" + Utilities.LegalCharOnly(playerInCharge.DisplayName) + "_" + Utilities.LegalCharOnly(grid.DisplayName) + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 
                                                 List<MyObjectBuilder_CubeGrid> objectBuilders = new List<MyObjectBuilder_CubeGrid>();
                                                 foreach (MyCubeGrid mygrid in grids)
                                                 {
-                                                    if (!(grid.GetObjectBuilder(true) is MyObjectBuilder_CubeGrid objectBuilder))
+                                                    if (!(mygrid.GetObjectBuilder(true) is MyObjectBuilder_CubeGrid objectBuilder))
                                                     {
                                                         throw new ArgumentException(mygrid + " has a ObjectBuilder thats not for a CubeGrid");
                                                     }
@@ -264,18 +220,14 @@ namespace Wormhole
                                                 }
                                                 MyObjectBuilder_ShipBlueprintDefinition definition = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_ShipBlueprintDefinition>();
                                                 definition.Id = new MyDefinitionId(new MyObjectBuilderType(typeof(MyObjectBuilder_ShipBlueprintDefinition)), filename);
-                                                definition.CubeGrids = objectBuilders.Select(x => (MyObjectBuilder_CubeGrid)x.Clone()).ToArray();
+                                                definition.CubeGrids = objectBuilders.Select(x => (MyObjectBuilder_CubeGrid) x.Clone()).ToArray();
                                                 List<ulong> playerIds = new List<ulong>();
                                                 foreach (MyObjectBuilder_CubeGrid cubeGrid in definition.CubeGrids)
                                                 {
                                                     foreach (MyObjectBuilder_CubeBlock cubeBlock in cubeGrid.CubeBlocks)
                                                     {
-
-                                                        if (!Config.KeepOriginalOwner)
-                                                        {
-                                                            cubeBlock.Owner = 0L;
-                                                            cubeBlock.BuiltBy = 0L;
-                                                        }
+                                                        cubeBlock.Owner = 0L;
+                                                        cubeBlock.BuiltBy = 0L;
                                                         if (!Config.ExportProjectorBlueprints)
                                                         {
                                                             if (cubeBlock is MyObjectBuilder_ProjectorBase projector)
@@ -288,7 +240,7 @@ namespace Wormhole
                                                             if (cockpit.Pilot != null)
                                                             {
                                                                 var playersteam = cockpit.Pilot.PlayerSteamId;
-                                                                var player = PlayerUtils.GetIdentityByNameOrId(playersteam.ToString());
+                                                                var player = Utilities.GetIdentityByNameOrId(playersteam.ToString());
                                                                 playerIds.Add(playersteam);
                                                                 ModCommunication.SendMessageTo(new JoinServerMessage(destination[1] + ":" + destination[2]), playersteam);
                                                             }
@@ -300,7 +252,7 @@ namespace Wormhole
                                                 builderDefinition.ShipBlueprints = new MyObjectBuilder_ShipBlueprintDefinition[] { definition };
                                                 foreach (var playerId in playerIds)
                                                 {
-                                                    var player = PlayerUtils.GetIdentityByNameOrId(playerId.ToString());
+                                                    var player = Utilities.GetIdentityByNameOrId(playerId.ToString());
                                                     player.Character.EnableBag(false);
                                                     Sandbox.Game.MyVisualScriptLogicProvider.SetPlayersHealth(player.IdentityId, 0);
                                                     player.Character.Close();
@@ -338,9 +290,9 @@ namespace Wormhole
                             var filedataarray = file.Name.Split('_');
                             if (filedataarray[0] == name)
                             {
-                                Log.Warn("yay we are going to load file: " + file.Name);
-                                var player = PlayerUtils.GetIdentityByNameOrId(filedataarray[1]);
-                                if (player != null || Config.KeepOriginalOwner)
+                                Log.Info("yay we are going to load file: " + file.Name);
+                                var player = Utilities.GetIdentityByNameOrId(filedataarray[1]);
+                                if (player != null)
                                 {
                                     var playerid = 0L;
                                     if (player != null)
@@ -349,13 +301,11 @@ namespace Wormhole
                                     }
                                     if (File.Exists(file.FullName))
                                     {
-                                        Log.Warn("test 1");
                                         if (MyObjectBuilderSerializer.DeserializeXML(file.FullName, out MyObjectBuilder_Definitions myObjectBuilder_Definitions))
                                         {
                                             var shipBlueprints = myObjectBuilder_Definitions.ShipBlueprints;
                                             if (shipBlueprints != null)
                                             {
-                                                Log.Warn("test 2");
                                                 foreach (var shipBlueprint in shipBlueprints)
                                                 {
                                                     var grids = shipBlueprint.CubeGrids;
@@ -366,16 +316,12 @@ namespace Wormhole
                                                         {
                                                             if (Utilities.UpdateGridsPositionAndStop(grids, pos))
                                                             {
-                                                                Log.Warn("test 3");
                                                                 foreach (var mygrid in grids)
                                                                 {
                                                                     foreach (MyObjectBuilder_CubeBlock block in mygrid.CubeBlocks)
                                                                     {
-                                                                        if (!Config.KeepOriginalOwner)
-                                                                        {
-                                                                            block.BuiltBy = playerid;
-                                                                            block.Owner = playerid;
-                                                                        }
+                                                                        block.BuiltBy = playerid;
+                                                                        block.Owner = playerid;
                                                                         if (block is MyObjectBuilder_Cockpit cockpit)
                                                                         {
                                                                             if (cockpit.Pilot != null)
@@ -383,7 +329,6 @@ namespace Wormhole
                                                                                 var seatedplayerid = MyAPIGateway.Multiplayer.Players.TryGetIdentityId(cockpit.Pilot.PlayerSteamId);
                                                                                 if (seatedplayerid != -1)
                                                                                 {
-                                                                                    Log.Warn("test 4");
                                                                                     var myplayer = MySession.Static.Players.TryGetIdentity(seatedplayerid);
                                                                                     if (seatedplayerid != -1 && Config.PlayerRespawn)
                                                                                     {
@@ -417,27 +362,26 @@ namespace Wormhole
                                                                     }
                                                                 }
 
-                                                                Log.Warn("test 5");
                                                                 List<MyObjectBuilder_EntityBase> objectBuilderList = new List<MyObjectBuilder_EntityBase>(grids.ToList());
-                                                                Log.Warn("test 6");
                                                                 MyEntities.RemapObjectBuilderCollection(objectBuilderList);
-                                                                Log.Warn("test 7");
                                                                 if (!(objectBuilderList.Count > 1))
                                                                 {
                                                                     foreach (var ob in objectBuilderList)
                                                                     {
-                                                                        MyEntities.CreateFromObjectBuilderParallel(ob, true);
+                                                                        if(MyEntities.CreateFromObjectBuilderParallel(ob, true) != null)
+                                                                        {
+                                                                            file.Delete();
+                                                                        }
                                                                     }
                                                                 }
                                                                 else
                                                                 {
-                                                                    MyStringId? temp;
-                                                                    MyEntities.Load(objectBuilderList, out temp);
-                                                                    Log.Warn(temp.ToString());
+                                                                    if(MyEntities.Load(objectBuilderList, out _))
+                                                                    {
+                                                                        file.Delete();
+                                                                    }
                                                                 }
                                                                 Sandbox.Game.MyVisualScriptLogicProvider.CreateLightning(gatepoint);
-                                                                file.Delete();
-
                                                             }
                                                         }
                                                         else
@@ -450,97 +394,6 @@ namespace Wormhole
                                         }
                                     }
                                 }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        public void Outboundwormhole(string ip, string outfile, double xgate, double ygate, double zgate)
-        {
-            BoundingSphereD gate = new BoundingSphereD(new Vector3D(xgate, ygate, zgate), Config.InRadiusGate);
-            foreach (var entity in MyAPIGateway.Entities.GetTopMostEntitiesInSphere(ref gate))
-            {
-                var grid = (entity as VRage.Game.ModAPI.IMyCubeGrid);
-                if (grid != null)
-                {
-                    var playerInCharge = MyAPIGateway.Players.GetPlayerControllingEntity(entity);
-                    if (playerInCharge != null && OwnershipUtils.GetOwner(entity as MyCubeGrid) == playerInCharge.IdentityId)//hasrighttomove(playerInCharge, entity as MyCubeGrid))
-                    {
-                        var WormholeDrives = new List<IMyJumpDrive>();
-                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                        gts.GetBlocksOfType(WormholeDrives);
-                        if (Config.DontNeedJD)
-                        {
-                            List<MyCubeGrid> grids = GridFinder.FindGridList(grid.EntityId.ToString(), playerInCharge as MyCharacter, Config.IncludeConnectedGrids);
-                            if (grids == null) { return; }
-                            if (grids.Count == 0) { return; }
-                            var filename = playerInCharge.SteamUserId.ToString() + "_" + grid.GetFriendlyName() + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
-
-                            Sandbox.Game.MyVisualScriptLogicProvider.CreateLightning(new Vector3D(xgate, ygate, zgate));
-                            if (GridManager.SaveGrid(CreatePath(outfile, filename), filename, ip, Config.KeepOriginalOwner, Config.ExportProjectorBlueprints, grids))
-                            {
-                                foreach (var delgrid in grids)
-                                {
-                                    delgrid.Delete();
-                                }
-                            }
-                        }
-                        else if (WormholeDrives.Count > 0)
-                        {
-                            foreach (var WormholeDrive in WormholeDrives)
-                            {
-                                if (WormholeDrive.OwnerId == playerInCharge.IdentityId && WormholeDrive.Enabled && WormholeDrive.CurrentStoredPower == WormholeDrive.MaxStoredPower && (WormholeDrive.BlockDefinition.SubtypeId.ToString() == Config.JumpDriveSubid || Config.WorkWithAllJD))
-                                {
-                                    WormholeDrive.CurrentStoredPower = 0;
-                                    if (Config.DisableJD)
-                                    {
-                                        foreach (var jd in WormholeDrives)
-                                        {
-                                            jd.Enabled = false;
-                                        }
-                                    }
-                                    List<MyCubeGrid> grids = GridFinder.FindGridList(grid.EntityId.ToString(), playerInCharge as MyCharacter, Config.IncludeConnectedGrids);
-                                    if (grids == null) { return; }
-                                    if (grids.Count == 0) { return; }
-                                    var filename = playerInCharge.SteamUserId.ToString() + "_" + playerInCharge.DisplayName + "_" + grid.DisplayName + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
-
-                                    Sandbox.Game.MyVisualScriptLogicProvider.CreateLightning(new Vector3D(xgate, ygate, zgate));
-                                    if (GridManager.SaveGrid(CreatePath(outfile, filename), filename, ip, Config.KeepOriginalOwner, Config.ExportProjectorBlueprints, grids))
-                                    {
-                                        foreach (var delgrid in grids)
-                                        {
-                                            delgrid.Delete();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        public void Inboundwormhole(string infile, double xgate, double ygate, double zgate)
-        {
-            DirectoryInfo gridDir = new DirectoryInfo(infile);
-            if (gridDir.Exists)
-            {
-                foreach (var file in gridDir.GetFiles())
-                {
-                    if (file != null)
-                    {
-                        var player = PlayerUtils.GetIdentityByNameOrId(file.Name.Split('_')[0]);
-                        if (player != null || Config.KeepOriginalOwner)
-                        {
-                            var playerid = -1L;
-                            if (player != null)
-                            {
-                                playerid = player.IdentityId;
-                            }
-                            if (GridManager.LoadGrid(file.FullName, new BoundingSphereD(new Vector3D(xgate, ygate, zgate), Config.OutOutsideRadiusGate), Config.OutInsideRadiusGate, false, playerid, Config.KeepOriginalOwner, Config.PlayerRespawn, Config.ThisIp, false) == GridImportResult.OK)
-                            {
-                                Sandbox.Game.MyVisualScriptLogicProvider.CreateLightning(new Vector3D(xgate, ygate, zgate));
-                                file.Delete();
                             }
                         }
                     }

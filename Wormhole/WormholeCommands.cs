@@ -12,6 +12,7 @@ using Torch.Utils;
 using VRage;
 using Sandbox.Game;
 using VRage.Game.Entity;
+using System.IO;
 
 namespace Wormhole
 {
@@ -244,6 +245,27 @@ namespace Wormhole
         public void ThorsHammer()
         {
             MyVisualScriptLogicProvider.CreateLightning(Context.Player.GetPosition());
+        }
+
+        [Command("Clearsync", "try to remove all files in sync folder")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void Clearsync()
+        {
+            DirectoryInfo gridDir = new DirectoryInfo(Plugin.Config.Folder + "/" + WormholePlugin.Instance.admingatesfolder);
+            if (gridDir.Exists)
+            {
+                foreach (var file in gridDir.GetFiles())
+                {
+                    if (file != null)
+                    {
+                        try
+                        {
+                            file.Delete();
+                        }
+                        catch { }
+                    }
+                }
+            }
         }
     }
 }

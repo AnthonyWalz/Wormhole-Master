@@ -25,7 +25,7 @@ namespace Wormhole {
         private void Add_OnClick(object sender, RoutedEventArgs e)
         {
             if (Xinput.Text != string.Empty && Yinput.Text != string.Empty && Zinput.Text != string.Empty) {
-                var newserver = new WormholeGate() { Name = Nameinput.Text, Description = Descriptioninput.Text, HexColor = HexColorinput.Text, SendTo = SendToinput.Text, X = Convert.ToDouble(Xinput.Text), Y = Convert.ToDouble(Yinput.Text), Z = Convert.ToDouble(Zinput.Text) };
+                var newserver = new WormholeGate() { Name = Nameinput.Text, Description = Descriptioninput.Text, HexColor = HexColorinput.Text, SendTo = SendToinput.Text, X = Convert.ToDouble(Xinput.Text), Y = Convert.ToDouble(Yinput.Text), Z = Convert.ToDouble(Zinput.Text), Rand = Randinput.IsChecked.Value };
                 if (Plugin.Config.WormholeGates.IndexOf(newserver) < 0 && Listservers.Items.IndexOf(newserver) < 0)
                 {
                     Plugin.Config.WormholeGates.Add(newserver);
@@ -37,6 +37,7 @@ namespace Wormhole {
                     Xinput.Text = string.Empty;
                     Yinput.Text = string.Empty;
                     Zinput.Text = string.Empty;
+                    Randinput.IsChecked = false;
                 }
             }
         }
@@ -56,6 +57,7 @@ namespace Wormhole {
                 Xinput.Text = (Listservers.SelectedItem as WormholeGate).X.ToString();
                 Yinput.Text = (Listservers.SelectedItem as WormholeGate).Y.ToString();
                 Zinput.Text = (Listservers.SelectedItem as WormholeGate).Z.ToString();
+                Randinput.IsChecked = (Listservers.SelectedItem as WormholeGate).Rand;
                 Plugin.Config.WormholeGates.Remove(Listservers.SelectedItem as WormholeGate);
                 Listservers.Items.Remove(Listservers.SelectedItem);
             }
@@ -79,6 +81,11 @@ namespace Wormhole {
         private void LordTylusGithubLink(object sender, RoutedEventArgs e)
         {
             System.Diagnostics.Process.Start("https://github.com/LordTylus");
+        }
+
+        private void AutoSend_Checked(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

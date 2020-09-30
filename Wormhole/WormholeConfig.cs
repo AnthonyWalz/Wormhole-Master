@@ -7,30 +7,7 @@ namespace Wormhole {
     public class Config : ViewModel
     {
         [XmlIgnore]
-        public MtObservableList<Server> WormholeServer { get; } = new MtObservableList<Server>();
-        [XmlIgnore]
         public MtObservableList<WormholeGate> WormholeGates { get; } = new MtObservableList<WormholeGate>();
-
-        [XmlElement("WormholeServer")]
-        public Server[] WormholeServer_xml
-        {
-            get
-            {
-                return this.WormholeServer.ToArray<Server>();
-            }
-            set
-            {
-                this.WormholeServer.Clear();
-                if (value != null)
-                {
-                    for (int i = 0; i < value.Length; i++)
-                    {
-                        Server Server = value[i];
-                        this.WormholeServer.Add(Server);
-                    }
-                }
-            }
-        }
         [XmlElement("WormholeGate")]
         public WormholeGate[] WormholeGates_xml
         {
@@ -52,9 +29,9 @@ namespace Wormhole {
             }
         }
 
-        private bool _newVersion = false;
+        private bool _saveOnExit = false;
+        private bool _saveOnEnter = false;
         private bool _allowInFaction = false;
-        private bool _keepOriginalOwner = false;
         private bool _includeConnectedGrids = true;
         private bool _exportProjectorGrids = false;
 
@@ -72,12 +49,12 @@ namespace Wormhole {
         private bool _dontNeedJD = false;
         private bool _disableJD = false;
         private bool _autoSend = false;
+        private bool[] _playerRespawnType = new bool[] {false, false};
 
-
-
-        public bool NewVersion { get => _newVersion; set => SetValue(ref _newVersion, value); }
+        public bool[] PlayerRespawnType { get => _playerRespawnType; set => SetValue(ref _playerRespawnType, value); }
+        public bool SaveOnExit { get => _saveOnExit; set => SetValue(ref _saveOnExit, value); }
+        public bool SaveOnEnter { get => _saveOnEnter; set => SetValue(ref _saveOnEnter, value); }
         public bool AllowInFaction { get => _allowInFaction; set => SetValue(ref _allowInFaction, value); }
-        public bool KeepOriginalOwner { get => _keepOriginalOwner; set => SetValue(ref _keepOriginalOwner, value); }
         public bool IncludeConnectedGrids { get => _includeConnectedGrids; set => SetValue(ref _includeConnectedGrids, value); }
         public bool ExportProjectorBlueprints { get => _exportProjectorGrids; set => SetValue(ref _exportProjectorGrids, value); }
 
