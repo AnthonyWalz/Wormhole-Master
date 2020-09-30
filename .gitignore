@@ -1,7 +1,11 @@
 
 ALE-Core/
 GameBinaries/
+GameBinaries
+GameBinaries.lnk
 TorchBinaries/
+TorchBinaries
+TorchBinaries.lnk
 bin/
 obj/
 .svn/
