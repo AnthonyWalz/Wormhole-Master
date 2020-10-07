@@ -202,7 +202,17 @@ namespace Wormhole
                     {
                         var destination = pickeddestination.Split(':');
 
-                        var filename = $"{destination[0]}_{playerInCharge.SteamUserId}_{Utilities.LegalCharOnly(playerInCharge.DisplayName)}_{Utilities.LegalCharOnly(grid.DisplayName)}_{DateTime.Now:yyyy_MM_dd_HH_mm_ss}";
+                        var transferFileInfo = new Utilities.TransferFileInfo
+                        {
+                            destinationWormhole = destination[0],
+                            steamUserId = playerInCharge.SteamUserId,
+                            playerName = playerInCharge.DisplayName,
+                            gridName = grid.DisplayName,
+                            time = DateTime.Now
+                        };
+
+                        Log.Info("creating filetransfer:" + transferFileInfo.ToString());
+                        var filename = transferFileInfo.createFileName();
 
                         List<MyObjectBuilder_CubeGrid> objectBuilders = new List<MyObjectBuilder_CubeGrid>();
                         foreach (MyCubeGrid mygrid in grids)
@@ -278,13 +288,16 @@ namespace Wormhole
                 if (file == null)
                     continue;
 
-                var filedataarray = file.Name.Split('_');
-                if (filedataarray[0] != wormholeName)
+                var fileTransferInfo = Utilities.TransferFileInfo.parseFileName(file.Name);
+                if (fileTransferInfo == null)
                     continue;
 
-                Log.Info("yay we are going to load file: " + file.Name);
+                if (wormholeName != fileTransferInfo.Value.destinationWormhole)
+                    continue;
 
-                var player = Utilities.GetIdentityByNameOrId(filedataarray[1]);
+                Log.Info("found filetransfer:" + fileTransferInfo.Value.ToString());
+
+                var player = Utilities.GetIdentityByNameOrId(fileTransferInfo.Value.steamUserId.ToString());
                 if (player == null)
                     continue;
 

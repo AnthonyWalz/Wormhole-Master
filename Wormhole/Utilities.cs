@@ -423,5 +423,46 @@ namespace Wormhole
             }
             return (float)(new BoundingSphereD(vector.Value, gridradius)).Radius;
         }
+
+        // parsing helper
+        public struct TransferFileInfo
+        {
+            public string destinationWormhole;
+            public ulong steamUserId;
+            public string playerName;
+            public string gridName;
+            public DateTime time;
+            public static TransferFileInfo? parseFileName(string path)
+            {
+                TransferFileInfo info;
+                var pathItems = path.Split('_');
+                if (pathItems.Count() != 10)
+                {
+                    return null;
+                }
+                else
+                {
+                    info.destinationWormhole = pathItems[0];
+                    info.steamUserId = ulong.Parse(pathItems[1]);
+                    info.playerName = pathItems[2];
+                    info.gridName = pathItems[3];
+
+                    var year = int.Parse(pathItems[4]);
+                    var month = int.Parse(pathItems[5]);
+                    var day = int.Parse(pathItems[6]);
+                    var hour = int.Parse(pathItems[7]);
+                    var minute = int.Parse(pathItems[8]);
+                    var second = int.Parse(pathItems[9]);
+
+                    info.time = new DateTime(year, month, day, hour, minute, second);
+
+                    return info;
+                }
+            }
+            public string createFileName()
+            {
+                return $"{destinationWormhole}_{steamUserId}_{Utilities.LegalCharOnly(playerName)}_{Utilities.LegalCharOnly(gridName)}_{time:yyyy_MM_dd_HH_mm_ss}";
+            }
+        }
     }
 }
