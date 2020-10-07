@@ -261,7 +261,7 @@ namespace Wormhole
                 }
             }
         }
-        public void Wormholetransferin(string name, double xgate, double ygate, double zgate)
+        public void Wormholetransferin(string wormholeName, double xgate, double ygate, double zgate)
         {
             Vector3D gatepoint = new Vector3D(xgate, ygate, zgate);
             BoundingSphereD gate = new BoundingSphereD(gatepoint, Config.RadiusGate);
@@ -270,7 +270,7 @@ namespace Wormhole
             if (!gridDir.Exists)
                 return;
 
-            if (!gridDir.GetFiles().Any(s => s.Name.Split('_')[0] == name))
+            if (!gridDir.GetFiles().Any(s => s.Name.Split('_')[0] == wormholeName))
                 return;
 
             foreach (var file in gridDir.GetFiles())
@@ -279,7 +279,7 @@ namespace Wormhole
                     continue;
 
                 var filedataarray = file.Name.Split('_');
-                if (filedataarray[0] != name)
+                if (filedataarray[0] != wormholeName)
                     continue;
 
                 Log.Info("yay we are going to load file: " + file.Name);
@@ -311,7 +311,7 @@ namespace Wormhole
                     var pos = Utilities.FindFreePos(gate, Utilities.FindGridsRadius(grids));
                     if (pos == null)
                     {
-                        Log.Warn("Unable to load grid no free space found at Wormhole: " + name);
+                        Log.Warn("Unable to load grid no free space found at Wormhole: " + wormholeName);
                         continue;
                     }
 
