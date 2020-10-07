@@ -79,6 +79,13 @@
                     </StackPanel>
                 </TabItem>
                 <TabItem>
+                    <TabItem.Header>Weight Calculations</TabItem.Header>
+                    <StackPanel MinWidth="500" Width="1000" MaxWidth="1000">
+                        <TextBlock>This is beta it has no incoming limit yet still it holds many fun possibilities</TextBlock>
+
+                    </StackPanel>
+                </TabItem>
+                <TabItem>
                     <TabItem.Header>Random Moving Gate</TabItem.Header>
                     <StackPanel MinWidth="500" Width="1000" MaxWidth="1000">
                         <Grid>

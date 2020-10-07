@@ -18,6 +18,11 @@ using Sandbox.Common.ObjectBuilders;
 using Torch.Mod;
 using Torch.Mod.Messages;
 using Sandbox.Game.World;
+using VRage.Profiler;
+using System.Runtime.InteropServices.ComTypes;
+using VRage.Game.Utils;
+using Sandbox.Engine.Voxels;
+using VRage.Game.Components;
 
 namespace Wormhole
 {
@@ -121,6 +126,7 @@ namespace Wormhole
 
                     var WormholeDrives = new List<IMyJumpDrive>();
                     var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                    //if gts is not null
                     gts.GetBlocksOfType(WormholeDrives);
                     if (WormholeDrives.Count > 0)
                     {
@@ -278,6 +284,7 @@ namespace Wormhole
         {
             Vector3D gatepoint = new Vector3D(xgate, ygate, zgate);
             BoundingSphereD gate = new BoundingSphereD(gatepoint, Config.RadiusGate);
+            gate.GetBoundingBox().
             DirectoryInfo gridDir = new DirectoryInfo(Config.Folder + "/" + admingatesfolder);
             if (gridDir.Exists)
             {
