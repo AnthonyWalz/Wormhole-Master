@@ -13,6 +13,7 @@ using VRageMath;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using System.Linq;
+using System.Threading.Tasks;
 using VRage.ObjectBuilders;
 using Sandbox.Common.ObjectBuilders;
 using Torch.Mod;
@@ -35,6 +36,8 @@ namespace Wormhole
         public void Save() => _config.Save();
 
         private int tick = 0;
+        private List<MyCubeGrid> deleteAfterSaveOnExitList = new List<MyCubeGrid>();
+        private Task saveOnExitTask;
 
         public string admingatesfolder = "admingates";
         public string admingatesconfirmfolder = "admingatesconfirm";
@@ -70,6 +73,11 @@ namespace Wormhole
         public override void Update()
         {
             base.Update();
+            if (deleteAfterSaveOnExitList.Count > 0 && !(saveOnExitTask is null) & saveOnExitTask.IsCompleted)
+            {
+                deleteAfterSaveOnExitList[0].Close();
+                deleteAfterSaveOnExitList.RemoveAt(0);
+            }
             if (++tick == Config.Tick)
             {
                 tick = 0;
@@ -256,7 +264,14 @@ namespace Wormhole
                             player.Character.Close();
                         }
                         if (MyObjectBuilderSerializer.SerializeXML(Utilities.CreateBlueprintPath(Path.Combine(Config.Folder, admingatesfolder), filename), false, builderDefinition))
-                            grids.ForEach(b => b.Close());
+                            if (Config.SaveOnExit)
+                            {
+                                if ((saveOnExitTask is null) || saveOnExitTask.IsCompleted)
+                                    saveOnExitTask = Torch.Save();
+                                deleteAfterSaveOnExitList.AddRange(grids);
+                            }
+                            else
+                                grids.ForEach(b => b.Close());
                     }
                 }
             }
@@ -376,6 +391,8 @@ namespace Wormhole
                                 }
                             }
                         }
+                    if (Config.SaveOnEnter)
+                        Torch.Save();
 
                     MyVisualScriptLogicProvider.CreateLightning(gatepoint);
                 }
