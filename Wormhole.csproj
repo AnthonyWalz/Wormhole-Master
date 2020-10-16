@@ -185,6 +185,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Request.cs" />
+    <Compile Include="WormholeGate.cs" />
     <Compile Include="Wormhole\Utilities.cs" />
     <Compile Include="Wormhole\WormholeCommands.cs" />
     <Compile Include="Wormhole\WormholeGUI.xaml.cs">

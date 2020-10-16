@@ -13,6 +13,7 @@ using VRage;
 using Sandbox.Game;
 using VRage.Game.Entity;
 using System.IO;
+using System.Linq;
 
 namespace Wormhole
 {
@@ -94,15 +95,13 @@ namespace Wormhole
             {
                 foreach (MyEntity entity in entities)
                 {
-                    if (entity != null)
+                    if (entity == null || !(entity is MySafeZone))
                     {
-                        if (entity is MySafeZone)
-                        {
-                            if (entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-SafeZone]"))
-                            {
-                                entity.Close();
-                            }
-                        }
+                        continue;
+                    }
+                    if (entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-SafeZone]"))
+                    {
+                        entity.Close();
                     }
                 }
             }
@@ -135,49 +134,40 @@ namespace Wormhole
                 var entities = MyEntities.GetEntities();
                 if (entities != null)
                 {
-                    foreach (MyEntity entity in entities)
-                    {
-                        if (entity != null)
-                        {
-                            if (entity is MyCubeGrid)
-                            {
-                                if (entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]"))
-                                {
-                                    entity.Close();
-                                }
-                            }
-                        }
-                    }
+                    entities.Where(b => b != null)
+                        .OfType<MyCubeGrid>()
+                        .Where(b => b.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]"))
+                        .ForEach(b => b.Close());
                 }
+
                 foreach (var server in Plugin.Config.WormholeGates)
                 {
                     string prefab;
-                    if (type == 2)
+                    switch (type)
                     {
-                        prefab = "WORMHOLE_ROTATING";
+                        case 2:
+                            prefab = "WORMHOLE_ROTATING";
+                            break;
+                        case 3:
+                            prefab = "WORMHOLE_ROTATING_ADVANCED";
+                            break;
+                        case 4:
+                            prefab = "WORMHOLE_53_BLOCKS";
+                            break;
+                        case 5:
+                            prefab = "WORMHOLE_ROTATING_53_BLOCKS";
+                            break;
+                        case 6:
+                            prefab = "WORMHOLE_ROTATING_ADVANCED_53_BLOCKS";
+                            break;
+                        default:
+                            prefab = "WORMHOLE";
+                            break;
                     }
-                    else if (type == 3)
-                    {
-                        prefab = "WORMHOLE_ROTATING_ADVANCED";
-                    }
-                    else if (type == 4)
-                    {
-                        prefab = "WORMHOLE_53_BLOCKS";
-                    }
-                    else if (type == 5)
-                    {
-                        prefab = "WORMHOLE_ROTATING_53_BLOCKS";
-                    }
-                    else if (type == 6)
-                    {
-                        prefab = "WORMHOLE_ROTATING_ADVANCED_53_BLOCKS";
-                    }
-                    else
-                    {
-                        prefab = "WORMHOLE";
-                    }
+
                     MyObjectBuilder_CubeGrid[] grids = MyPrefabManager.Static.GetGridPrefab(prefab);
                     List<MyObjectBuilder_EntityBase> objectBuilderList = new List<MyObjectBuilder_EntityBase>();
+
                     foreach (var grid in grids)
                     {
                         foreach (MyObjectBuilder_CubeBlock cubeBlock in grid.CubeBlocks)
@@ -193,7 +183,8 @@ namespace Wormhole
                                 cubeBlock.BuiltBy = ownerid;
                             }
                         }
-                        objectBuilderList.Add(grid as MyObjectBuilder_EntityBase);
+
+                        objectBuilderList.Add(grid);
                     }
 
                     bool firstGrid = true;
@@ -218,11 +209,9 @@ namespace Wormhole
                             currentPosition.Z = server.Z;
 
                             firstGrid = false;
-
                         }
                         else
                         {
-
                             currentPosition.X += deltaX;
                             currentPosition.Y += deltaY;
                             currentPosition.Z += deltaZ;
@@ -231,9 +220,11 @@ namespace Wormhole
                         realPosition.Position = currentPosition;
                         grid.PositionAndOrientation = realPosition;
                     }
+
                     MyEntities.RemapObjectBuilderCollection(objectBuilderList);
                     MyEntities.Load(objectBuilderList, out _);
                 }
+
                 Context.Respond("Deleted all entities with '[NPC-IGNORE]_[Wormhole-Gate]' in them and readded Gates to each Wormhole");
             }
             catch {
@@ -252,19 +243,24 @@ namespace Wormhole
         public void Clearsync()
         {
             DirectoryInfo gridDir = new DirectoryInfo(Plugin.Config.Folder + "/" + WormholePlugin.Instance.admingatesfolder);
-            if (gridDir.Exists)
+
+            if (!gridDir.Exists)
             {
-                foreach (var file in gridDir.GetFiles())
+                return;
+            }
+
+            foreach (var file in gridDir.GetFiles())
+            {
+                if (file == null)
                 {
-                    if (file != null)
-                    {
-                        try
-                        {
-                            file.Delete();
-                        }
-                        catch { }
-                    }
+                    continue;
                 }
+
+                try
+                {
+                    file.Delete();
+                }
+                catch { }
             }
         }
     }
