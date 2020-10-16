@@ -6,6 +6,7 @@ using Sandbox.Game.World;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using VRage;
@@ -69,6 +70,21 @@ namespace Wormhole
             grids.Physics.LinearVelocity = new Vector3(0, 0, 0);
             grids.Physics.AngularVelocity = new Vector3(0, 0, 0);
             return true;
+        }
+
+        public static string CreateBlueprintPath(string folder, string fileName)
+        {
+            Directory.CreateDirectory(folder);
+            return Path.Combine(folder, fileName + ".sbc");
+        }
+        public static bool HasRightToMove(IMyPlayer player, MyCubeGrid grid)
+        {
+            var result = player.GetRelationTo(GetOwner(grid)) == MyRelationsBetweenPlayerAndBlock.Owner;
+            if (WormholePlugin.Instance.Config.AllowInFaction && !result)
+            {
+                result = player.GetRelationTo(GetOwner(grid)) == MyRelationsBetweenPlayerAndBlock.FactionShare;
+            }
+            return result;
         }
         public static long GetOwner(MyCubeGrid grid)
         {
@@ -256,7 +272,7 @@ namespace Wormhole
                 }
             }
 
-            ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> bag = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group>();
+            var bag = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group>();
 
             if (list.Count == 0)
                 return bag;
@@ -270,7 +286,7 @@ namespace Wormhole
         public static ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> FindGridGroup(string gridName)
         {
 
-            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> groups = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group>();
+            var groups = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group>();
             Parallel.ForEach(MyCubeGridGroups.Static.Physical.Groups, group => {
 
                 foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes)
@@ -312,45 +328,43 @@ namespace Wormhole
                 {
                     IMyCubeGrid cubeGrid = groupNodes.NodeData;
 
-                    if (cubeGrid != null)
+                    if (cubeGrid == null)
+                        continue;
+
+                    if (cubeGrid.Physics == null)
+                        continue;
+
+                    // check if the ray comes anywhere near the Grid before continuing.    
+                    if (!ray.Intersects(cubeGrid.WorldAABB).HasValue)
+                        continue;
+
+                    Vector3I? hit = cubeGrid.RayCastBlocks(startPosition, endPosition);
+
+                    if (!hit.HasValue)
+                        continue;
+
+                    double distance = (startPosition - cubeGrid.GridIntegerToWorld(hit.Value)).Length();
+
+
+                    if (list.TryGetValue(group, out double oldDistance))
                     {
 
-                        if (cubeGrid.Physics == null)
-                            continue;
-
-                        // check if the ray comes anywhere near the Grid before continuing.    
-                        if (ray.Intersects(cubeGrid.WorldAABB).HasValue)
+                        if (distance < oldDistance)
                         {
-
-                            Vector3I? hit = cubeGrid.RayCastBlocks(startPosition, endPosition);
-
-                            if (hit.HasValue)
-                            {
-
-                                double distance = (startPosition - cubeGrid.GridIntegerToWorld(hit.Value)).Length();
-
-
-                                if (list.TryGetValue(group, out double oldDistance))
-                                {
-
-                                    if (distance < oldDistance)
-                                    {
-                                        list.Remove(group);
-                                        list.Add(group, distance);
-                                    }
-
-                                }
-                                else
-                                {
-
-                                    list.Add(group, distance);
-                                }
-                            }
+                            list.Remove(group);
+                            list.Add(group, distance);
                         }
+
+                    }
+                    else
+                    {
+
+                        list.Add(group, distance);
                     }
                 }
             }
-            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> bag = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group>();
+
+            var bag = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group>();
 
             if (list.Count == 0)
                 return bag;

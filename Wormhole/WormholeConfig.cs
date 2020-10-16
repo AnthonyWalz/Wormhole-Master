@@ -11,20 +11,19 @@ namespace Wormhole {
         [XmlElement("WormholeGate")]
         public WormholeGate[] WormholeGates_xml
         {
-            get
-            {
-                return this.WormholeGates.ToArray<WormholeGate>();
-            }
+            get => WormholeGates.ToArray();
             set
             {
-                this.WormholeGates.Clear();
-                if (value != null)
+                WormholeGates.Clear();
+                if (value == null)
                 {
-                    for (int i = 0; i < value.Length; i++)
-                    {
-                        WormholeGate Wormhole = value[i];
-                        this.WormholeGates.Add(Wormhole);
-                    }
+                    return;
+                }
+
+                for (int i = 0; i < value.Length; i++)
+                {
+                    WormholeGate Wormhole = value[i];
+                    WormholeGates.Add(Wormhole);
                 }
             }
         }
