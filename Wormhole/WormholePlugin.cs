@@ -95,21 +95,17 @@ namespace Wormhole
         {
             foreach (var grid in MyAPIGateway.Entities.GetTopMostEntitiesInSphere(ref gate).OfType<IMyCubeGrid>())
             {
-                var WormholeDrives = new List<IMyJumpDrive>();
-
                 var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
 
-                if (gts == null)
-                    continue;
-
-                gts.GetBlocksOfType(WormholeDrives);
-
-                if (WormholeDrives.Count <= 0)
-                    continue;
-
-                foreach (var WormholeDrive in WormholeDrives)
+                if( gts != null )
                 {
-                    WormholeTransferOutFile(sendto, grid, WormholeDrive, gatepoint, WormholeDrives);
+                    var WormholeDrives = new List<IMyJumpDrive>();
+                    gts.GetBlocksOfType(WormholeDrives);
+
+                    foreach (var WormholeDrive in WormholeDrives)
+                    {
+                        WormholeTransferOutFile(sendto, grid, WormholeDrive, gatepoint, WormholeDrives);
+                    }
                 }
             }
         }
