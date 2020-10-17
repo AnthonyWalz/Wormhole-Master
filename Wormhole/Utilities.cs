@@ -25,9 +25,7 @@ namespace Wormhole
         public static bool UpdateGridsPositionAndStop(MyObjectBuilder_CubeGrid[] grids, Vector3D newPosition)
         {
             bool firstGrid = true;
-            double deltaX = 0;
-            double deltaY = 0;
-            double deltaZ = 0;
+            Vector3D delta = new Vector3D(0,0,0);
 
             foreach (var grid in grids)
             {
@@ -41,21 +39,13 @@ namespace Wormhole
                 var currentPosition = realPosition.Position;
                 if (firstGrid)
                 {
-                    deltaX = newPosition.X - currentPosition.X;
-                    deltaY = newPosition.Y - currentPosition.Y;
-                    deltaZ = newPosition.Z - currentPosition.Z;
-
-                    currentPosition.X = newPosition.X;
-                    currentPosition.Y = newPosition.Y;
-                    currentPosition.Z = newPosition.Z;
-
+                    delta = newPosition - currentPosition;
+                    currentPosition = newPosition;
                     firstGrid = false;
                 }
                 else
                 {
-                    currentPosition.X += deltaX;
-                    currentPosition.Y += deltaY;
-                    currentPosition.Z += deltaZ;
+                    currentPosition += delta;
                 }
                 realPosition.Position = currentPosition;
                 grid.PositionAndOrientation = realPosition;
