@@ -284,7 +284,7 @@ namespace Wormhole
 
             foreach (var file in gridDir.GetFiles())
             {
-                if (file != null)
+                if (file != null && File.Exists(file.FullName))
                 {
                     var fileTransferInfo = Utilities.TransferFileInfo.parseFileName(file.Name);
                     if (fileTransferInfo.HasValue)
@@ -308,9 +308,6 @@ namespace Wormhole
 
             var playerid = 0L;
             playerid = player.IdentityId;
-
-            if (!File.Exists(fileInfo.FullName))
-                return;
 
             if (!MyObjectBuilderSerializer.DeserializeXML(fileInfo.FullName, out MyObjectBuilder_Definitions myObjectBuilder_Definitions))
                 return;
