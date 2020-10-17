@@ -25,30 +25,29 @@ namespace Wormhole
         public static bool UpdateGridsPositionAndStop(MyObjectBuilder_CubeGrid[] grids, Vector3D newPosition)
         {
             bool firstGrid = true;
-            Vector3D delta = new Vector3D(0,0,0);
+            Vector3D delta_NewPos_Grid0Pos = new Vector3D(0, 0, 0);
 
             foreach (var grid in grids)
             {
-                var position = grid.PositionAndOrientation;
-                if (position == null)
+                if (grid.PositionAndOrientation == null)
                 {
                     Log.Warn("Position and Orientation Information missing from Grid in file.");
                     return false;
                 }
-                var realPosition = position.Value;
-                var currentPosition = realPosition.Position;
+                var gridPositionOrientation = grid.PositionAndOrientation.Value;
                 if (firstGrid)
                 {
-                    delta = newPosition - currentPosition;
-                    currentPosition = newPosition;
+                    delta_NewPos_Grid0Pos = newPosition - gridPositionOrientation.Position;
+                    gridPositionOrientation.Position = newPosition;
                     firstGrid = false;
                 }
                 else
                 {
-                    currentPosition += delta;
+                    gridPositionOrientation.Position += delta_NewPos_Grid0Pos;
                 }
-                realPosition.Position = currentPosition;
-                grid.PositionAndOrientation = realPosition;
+                grid.PositionAndOrientation = gridPositionOrientation;
+
+                // reset velocity
                 grid.AngularVelocity = new SerializableVector3();
                 grid.LinearVelocity = new SerializableVector3();
             }
