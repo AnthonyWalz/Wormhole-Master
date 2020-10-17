@@ -232,7 +232,7 @@ namespace Wormhole
 
                 definition.CubeGrids = objectBuilders.Select(x => (MyObjectBuilder_CubeGrid)x.Clone()).ToArray();
 
-                List<ulong> playerIds = new List<ulong>();
+                List<ulong> playerSteamIds = new List<ulong>();
                 foreach (MyObjectBuilder_CubeGrid cubeGrid in definition.CubeGrids)
                 {
                     foreach (MyObjectBuilder_CubeBlock cubeBlock in cubeGrid.CubeBlocks)
@@ -250,9 +250,9 @@ namespace Wormhole
                         {
                             if (cockpit.Pilot != null)
                             {
-                                var playersteam = cockpit.Pilot.PlayerSteamId;
-                                playerIds.Add(playersteam);
-                                ModCommunication.SendMessageTo(new JoinServerMessage(destination[1] + ":" + destination[2]), playersteam);
+                                var playerSteamId = cockpit.Pilot.PlayerSteamId;
+                                playerSteamIds.Add(playerSteamId);
+                                ModCommunication.SendMessageTo(new JoinServerMessage(destination[1] + ":" + destination[2]), playerSteamId);
                             }
                         }
                     }
@@ -260,9 +260,9 @@ namespace Wormhole
 
                 MyObjectBuilder_Definitions builderDefinition = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Definitions>();
                 builderDefinition.ShipBlueprints = new[] { definition };
-                foreach (var playerId in playerIds)
+                foreach (var playerSteamId in playerSteamIds)
                 {
-                    var player = Utilities.GetIdentityByNameOrId(playerId.ToString());
+                    var player = Utilities.GetIdentityBySteamId(playerSteamId);
                     player.Character.EnableBag(false);
                     MyVisualScriptLogicProvider.SetPlayersHealth(player.IdentityId, 0);
                     player.Character.Close();
@@ -301,7 +301,7 @@ namespace Wormhole
         {
             Log.Info("processing filetransfer:" + fileTransferInfo.ToString());
 
-            var player = Utilities.GetIdentityByNameOrId(fileTransferInfo.steamUserId.ToString());
+            var player = Utilities.GetIdentityBySteamId(fileTransferInfo.steamUserId);
             if (player == null)
                 return;
 
