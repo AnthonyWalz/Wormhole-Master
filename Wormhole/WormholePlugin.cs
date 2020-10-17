@@ -97,7 +97,7 @@ namespace Wormhole
             {
                 var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
 
-                if( gts != null )
+                if (gts != null)
                 {
                     var WormholeDrives = new List<IMyJumpDrive>();
                     gts.GetBlocksOfType(WormholeDrives);
@@ -373,8 +373,6 @@ namespace Wormhole
                             myplayer.SavedCharacters.Clear();
                             myplayer.SavedCharacters.Add(cockpit.Pilot.EntityId);
                             MyAPIGateway.Multiplayer.Players.SetControlledEntity(cockpit.Pilot.PlayerSteamId, cockpit.Pilot as VRage.ModAPI.IMyEntity);
-
-
                         }
                     }
                 }
@@ -382,6 +380,7 @@ namespace Wormhole
                 List<MyObjectBuilder_EntityBase> objectBuilderList = new List<MyObjectBuilder_EntityBase>(grids.ToList());
                 MyEntities.RemapObjectBuilderCollection(objectBuilderList);
                 if (objectBuilderList.Count > 1)
+                {
                     if (MyEntities.Load(objectBuilderList, out _))
                         fileInfo.Delete();
                     else
@@ -394,7 +393,7 @@ namespace Wormhole
                             }
                         }
                     }
-
+                }
                 MyVisualScriptLogicProvider.CreateLightning(gatePosition);
             }
         }
