@@ -19,6 +19,7 @@ using Torch.Mod;
 using Torch.Mod.Messages;
 using Sandbox.Game.World;
 using Sandbox.Game;
+using System.Windows.Documents;
 
 namespace Wormhole
 {
@@ -349,37 +350,39 @@ namespace Wormhole
 
                         foreach (MyObjectBuilder_Cockpit cockpit in mygrid.CubeBlocks)
                         {
-                            if (cockpit.Pilot == null)
-                                continue;
-
-                            var seatedplayerid = MyAPIGateway.Multiplayer.Players.TryGetIdentityId(cockpit.Pilot.PlayerSteamId);
-                            if (seatedplayerid == -1)
+                            if (cockpit.Pilot == null || !Config.PlayerRespawn)
                             {
                                 cockpit.Pilot = null;
                                 continue;
                             }
 
-                            var myplayer = MySession.Static.Players.TryGetIdentity(seatedplayerid);
-                            if (seatedplayerid == -1 || !Config.PlayerRespawn)
+                            var pilotSteamId = cockpit.Pilot.PlayerSteamId;
+                            var pilotIdentityId = MyAPIGateway.Multiplayer.Players.TryGetIdentityId(pilotSteamId);
+                            if (pilotIdentityId == -1)
                             {
+                                Log.Info("cannot find player, removing character from cockpit, steamid: " + pilotSteamId);
                                 cockpit.Pilot = null;
                                 continue;
                             }
-                            cockpit.Pilot.OwningPlayerIdentityId = seatedplayerid;
-                            if (myplayer.Character != null)
+                            cockpit.Pilot.OwningPlayerIdentityId = pilotIdentityId;
+
+                            var pilotIdentity = MySession.Static.Players.TryGetIdentity(pilotIdentityId);
+                            if (pilotIdentity.Character != null)
                             {
+                                // if there is a character, kill it
+                                Log.Info("killing character, steamid: " + pilotSteamId);
                                 if (Config.ThisIp != null && Config.ThisIp != "")
                                 {
-                                    ModCommunication.SendMessageTo(new JoinServerMessage(Config.ThisIp), cockpit.Pilot.PlayerSteamId);
+                                    ModCommunication.SendMessageTo(new JoinServerMessage(Config.ThisIp), pilotSteamId);
                                 }
-                                myplayer.Character.EnableBag(false);
-                                MyVisualScriptLogicProvider.SetPlayersHealth(seatedplayerid, 0);
-                                myplayer.Character.Close();
+                                pilotIdentity.Character.EnableBag(false);
+                                MyVisualScriptLogicProvider.SetPlayersHealth(pilotIdentityId, 0);
+                                pilotIdentity.Character.Close();
                             }
-                            myplayer.PerformFirstSpawn();
-                            myplayer.SavedCharacters.Clear();
-                            myplayer.SavedCharacters.Add(cockpit.Pilot.EntityId);
-                            MyAPIGateway.Multiplayer.Players.SetControlledEntity(cockpit.Pilot.PlayerSteamId, cockpit.Pilot as VRage.ModAPI.IMyEntity);
+                            pilotIdentity.PerformFirstSpawn();
+                            pilotIdentity.SavedCharacters.Clear();
+                            pilotIdentity.SavedCharacters.Add(cockpit.Pilot.EntityId);
+                            MyAPIGateway.Multiplayer.Players.SetControlledEntity(pilotSteamId, cockpit.Pilot as VRage.ModAPI.IMyEntity);
                         }
                     }
                 }
