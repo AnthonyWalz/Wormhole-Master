@@ -77,8 +77,10 @@ namespace Wormhole
                 {
                     foreach (WormholeGate wormhole in Config.WormholeGates)
                     {
-                        Wormholetransferout(wormhole.SendTo, wormhole.X, wormhole.Y, wormhole.Z);
-                        Wormholetransferin(wormhole.Name.Trim(), wormhole.X, wormhole.Y, wormhole.Z);
+                        Vector3D gatepoint = new Vector3D(wormhole.X, wormhole.Y, wormhole.Z);
+                        BoundingSphereD gate = new BoundingSphereD(gatepoint, Config.RadiusGate);
+                        Wormholetransferout(wormhole.SendTo, gatepoint, gate);
+                        Wormholetransferin(wormhole.Name.Trim(), gatepoint, gate);
                     }
                 }
                 catch (Exception e)
@@ -89,10 +91,8 @@ namespace Wormhole
         }
 
 
-        public void Wormholetransferout(string sendto, double xgate, double ygate, double zgate)
+        public void Wormholetransferout(string sendto, Vector3D gatepoint, BoundingSphereD gate)
         {
-            Vector3D gatepoint = new Vector3D(xgate, ygate, zgate);
-            BoundingSphereD gate = new BoundingSphereD(gatepoint, Config.RadiusGate);
             foreach (var grid in MyAPIGateway.Entities.GetTopMostEntitiesInSphere(ref gate).OfType<IMyCubeGrid>())
             {
                 var WormholeDrives = new List<IMyJumpDrive>();
@@ -276,7 +276,7 @@ namespace Wormhole
                     grids.ForEach(b => b.Close());
             }
         }
-        public void Wormholetransferin(string wormholeName, double xgate, double ygate, double zgate)
+        public void Wormholetransferin(string wormholeName, Vector3D gatepoint, BoundingSphereD gate)
         {
             DirectoryInfo gridDir = new DirectoryInfo(Config.Folder + "/" + admingatesfolder);
 
@@ -295,17 +295,15 @@ namespace Wormhole
                     {
                         if (wormholeName != fileTransferInfo.Value.destinationWormhole)
                         {
-                            WormholeTransferInFile(file, fileTransferInfo.Value, new Vector3D(xgate, ygate, zgate));
+                            WormholeTransferInFile(file, fileTransferInfo.Value, gatepoint, gate);
                         }
                     }
                 }
             }
         }
 
-        private void WormholeTransferInFile(FileInfo fileInfo, Utilities.TransferFileInfo fileTransferInfo, Vector3D gatePosition)
+        private void WormholeTransferInFile(FileInfo fileInfo, Utilities.TransferFileInfo fileTransferInfo, Vector3D gatePosition, BoundingSphereD gate)
         {
-            BoundingSphereD gate = new BoundingSphereD(gatePosition, Config.RadiusGate);
-
             Log.Info("processing filetransfer:" + fileTransferInfo.ToString());
 
             var player = Utilities.GetIdentityByNameOrId(fileTransferInfo.steamUserId.ToString());
