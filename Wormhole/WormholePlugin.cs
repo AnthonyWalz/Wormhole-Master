@@ -303,17 +303,25 @@ namespace Wormhole
 
             var player = Utilities.GetIdentityBySteamId(fileTransferInfo.steamUserId);
             if (player == null)
+            {
+                Log.Error("couldn't find player with steam id: " + fileTransferInfo.steamUserId);
                 return;
+            }
 
             var playerid = player.IdentityId;
 
             if (!MyObjectBuilderSerializer.DeserializeXML(fileInfo.FullName, out MyObjectBuilder_Definitions myObjectBuilder_Definitions))
+            {
+                Log.Error("error deserializing xml: " + fileInfo.FullName);
                 return;
+            }
 
             var shipBlueprints = myObjectBuilder_Definitions.ShipBlueprints;
-
             if (shipBlueprints == null)
+            {
+                Log.Error("can't find any blueprints in xml: " + fileInfo.FullName);
                 return;
+            }
 
             foreach (var shipBlueprint in shipBlueprints)
             {
@@ -324,7 +332,7 @@ namespace Wormhole
                 var pos = Utilities.FindFreePos(gate, Utilities.FindGridsRadius(grids));
                 if (pos == null)
                 {
-                    Log.Warn("Unable to load grid no free space found at Wormhole: " + fileTransferInfo.destinationWormhole);
+                    Log.Warn("no free space available for grid '" + shipBlueprint.DisplayName + "' at wormhole '" + fileTransferInfo.destinationWormhole + "'");
                     continue;
                 }
 
