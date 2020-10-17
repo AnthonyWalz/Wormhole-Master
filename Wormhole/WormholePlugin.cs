@@ -377,7 +377,9 @@ namespace Wormhole
                 if (objectBuilderList.Count > 1)
                 {
                     if (MyEntities.Load(objectBuilderList, out _))
+                    {
                         fileInfo.Delete();
+                    }
                     else
                     {
                         foreach (var ob in objectBuilderList)
