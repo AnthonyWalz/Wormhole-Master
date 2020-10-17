@@ -251,7 +251,6 @@ namespace Wormhole
                             if (cockpit.Pilot != null)
                             {
                                 var playersteam = cockpit.Pilot.PlayerSteamId;
-                                var player = Utilities.GetIdentityByNameOrId(playersteam.ToString());
                                 playerIds.Add(playersteam);
                                 ModCommunication.SendMessageTo(new JoinServerMessage(destination[1] + ":" + destination[2]), playersteam);
                             }
