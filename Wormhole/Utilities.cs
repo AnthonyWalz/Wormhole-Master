@@ -91,12 +91,10 @@ namespace Wormhole
         }
         public static MyIdentity GetIdentityBySteamId(ulong steamId)
         {
-            foreach (var identity in MySession.Static.Players.GetAllIdentities())
+            var identityId = MySession.Static.Players.TryGetIdentityId(steamId);
+            if (identityId != -1)
             {
-                if (MySession.Static.Players.TryGetSteamId(identity.IdentityId) == steamId)
-                {
-                    return identity;
-                }
+                return MySession.Static.Players.TryGetIdentity(identityId);
             }
             return null;
         }
