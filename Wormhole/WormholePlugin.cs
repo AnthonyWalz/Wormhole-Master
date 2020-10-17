@@ -340,12 +340,16 @@ namespace Wormhole
                 {
                     foreach (var mygrid in grids)
                     {
+                        // takeover ownership
                         foreach (MyObjectBuilder_CubeBlock block in mygrid.CubeBlocks)
                         {
                             block.BuiltBy = playerid;
                             block.Owner = playerid;
+                        }
 
-                            if (!(block is MyObjectBuilder_Cockpit cockpit) || cockpit.Pilot == null)
+                        foreach (MyObjectBuilder_Cockpit cockpit in mygrid.CubeBlocks)
+                        {
+                            if ( cockpit.Pilot == null)
                                 continue;
 
                             var seatedplayerid = MyAPIGateway.Multiplayer.Players.TryGetIdentityId(cockpit.Pilot.PlayerSteamId);
