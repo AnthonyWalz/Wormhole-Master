@@ -36,6 +36,8 @@ namespace Wormhole
         public void Save() => _config.Save();
 
         private int tick = 0;
+        private List<MyCubeGrid> deleteAfterSaveOnExitList = new List<MyCubeGrid>();
+        private Task saveOnExitTask;
 
         // List to be used for entitys to be closed when saving is done.
         private List<MyCubeGrid> deleteAfterSaveOnExitList = new List<MyCubeGrid>();
@@ -76,6 +78,11 @@ namespace Wormhole
         public override void Update()
         {
             base.Update();
+            if (deleteAfterSaveOnExitList.Count > 0 && !(saveOnExitTask is null) & saveOnExitTask.IsCompleted)
+            {
+                deleteAfterSaveOnExitList[0].Close();
+                deleteAfterSaveOnExitList.RemoveAt(0);
+            }
             if (++tick == Config.Tick)
             {
                 // Checks if there are entities to be removed
