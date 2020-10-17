@@ -305,8 +305,7 @@ namespace Wormhole
             if (player == null)
                 return;
 
-            var playerid = 0L;
-            playerid = player.IdentityId;
+            var playerid = player.IdentityId;
 
             if (!MyObjectBuilderSerializer.DeserializeXML(fileInfo.FullName, out MyObjectBuilder_Definitions myObjectBuilder_Definitions))
                 return;
