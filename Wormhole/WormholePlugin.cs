@@ -349,7 +349,7 @@ namespace Wormhole
 
                         foreach (MyObjectBuilder_Cockpit cockpit in mygrid.CubeBlocks)
                         {
-                            if ( cockpit.Pilot == null)
+                            if (cockpit.Pilot == null)
                                 continue;
 
                             var seatedplayerid = MyAPIGateway.Multiplayer.Players.TryGetIdentityId(cockpit.Pilot.PlayerSteamId);
