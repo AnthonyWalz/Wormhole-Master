@@ -171,7 +171,8 @@ namespace Wormhole
         {
 
             ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> groups = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group>();
-            Parallel.ForEach(MyCubeGridGroups.Static.Mechanical.Groups, group => {
+            Parallel.ForEach(MyCubeGridGroups.Static.Mechanical.Groups, group =>
+            {
 
                 foreach (MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Node groupNodes in group.Nodes)
                 {
@@ -268,7 +269,8 @@ namespace Wormhole
         {
 
             var groups = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group>();
-            Parallel.ForEach(MyCubeGridGroups.Static.Physical.Groups, group => {
+            Parallel.ForEach(MyCubeGridGroups.Static.Physical.Groups, group =>
+            {
 
                 foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes)
                 {
