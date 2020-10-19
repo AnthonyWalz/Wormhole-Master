@@ -279,10 +279,7 @@ namespace Wormhole
             if (!gridDir.Exists)
                 return;
 
-            if (!gridDir.GetFiles().Any(s => s.Name.Split('_')[0] == wormholeName))
-                return;
-
-            foreach (var file in gridDir.GetFiles())
+            foreach (var file in gridDir.GetFiles().Where(s => s.Name.Split('_')[0] == wormholeName))
             {
                 if (file != null && File.Exists(file.FullName))
                 {
