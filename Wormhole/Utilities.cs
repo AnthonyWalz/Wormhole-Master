@@ -446,6 +446,11 @@ namespace Wormhole
                     return info;
                 }
             }
+
+            public string createLogString()
+            {
+                return $"dest: {destinationWormhole};steamid: {steamUserId};playername: {playerName};gridName: {gridName};time:{time:yyyy_MM_dd_HH_mm_ss};";
+            }
             public string createFileName()
             {
                 return $"{destinationWormhole}_{steamUserId}_{Utilities.LegalCharOnly(playerName)}_{Utilities.LegalCharOnly(gridName)}_{time:yyyy_MM_dd_HH_mm_ss}";

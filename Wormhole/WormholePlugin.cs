@@ -297,7 +297,7 @@ namespace Wormhole
 
         private void WormholeTransferInFile(FileInfo fileInfo, Utilities.TransferFileInfo fileTransferInfo, Vector3D gatePosition, BoundingSphereD gate)
         {
-            Log.Info("processing filetransfer:" + fileTransferInfo.ToString());
+            Log.Info("processing filetransfer:" + fileTransferInfo.createLogString());
 
             var player = Utilities.GetIdentityBySteamId(fileTransferInfo.steamUserId);
             if (player == null)
