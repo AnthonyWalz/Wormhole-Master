@@ -392,14 +392,14 @@ namespace Wormhole
                     {
                         fileInfo.Delete();
                     }
-                    else
+                }
+                else
+                {
+                    foreach (var ob in objectBuilderList)
                     {
-                        foreach (var ob in objectBuilderList)
+                        if (MyEntities.CreateFromObjectBuilderParallel(ob, true) != null)
                         {
-                            if (MyEntities.CreateFromObjectBuilderParallel(ob, true) != null)
-                            {
-                                fileInfo.Delete();
-                            }
+                            fileInfo.Delete();
                         }
                     }
                 }
