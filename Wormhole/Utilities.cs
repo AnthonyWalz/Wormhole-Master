@@ -432,7 +432,14 @@ namespace Wormhole
                     var day = int.Parse(pathItems[6]);
                     var hour = int.Parse(pathItems[7]);
                     var minute = int.Parse(pathItems[8]);
-                    var second = int.Parse(pathItems[9]);
+
+                    var lastPart = pathItems[9];
+                    if (lastPart.EndsWith(".sbc"))
+                    {
+                        lastPart = lastPart.Substring(0, lastPart.Length - 4);
+                    }
+                    var second = int.Parse(lastPart);
+
 
                     info.time = new DateTime(year, month, day, hour, minute, second);
 
