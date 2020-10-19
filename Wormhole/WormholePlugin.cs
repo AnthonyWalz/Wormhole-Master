@@ -345,7 +345,7 @@ namespace Wormhole
                             block.Owner = playerid;
                         }
 
-                        foreach (MyObjectBuilder_Cockpit cockpit in mygrid.CubeBlocks)
+                        foreach (MyObjectBuilder_Cockpit cockpit in mygrid.CubeBlocks.Where( block => block is MyObjectBuilder_Cockpit))
                         {
                             if (cockpit.Pilot == null || !Config.PlayerRespawn)
                             {
