@@ -286,7 +286,7 @@ namespace Wormhole
                     var fileTransferInfo = Utilities.TransferFileInfo.parseFileName(file.Name);
                     if (fileTransferInfo.HasValue)
                     {
-                        if (wormholeName != fileTransferInfo.Value.destinationWormhole)
+                        if (wormholeName == fileTransferInfo.Value.destinationWormhole)
                         {
                             WormholeTransferInFile(file, fileTransferInfo.Value, gatepoint, gate);
                         }
