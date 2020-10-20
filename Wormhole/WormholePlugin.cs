@@ -304,6 +304,8 @@ namespace Wormhole
             if (!gridDir.Exists)
                 return;
 
+            var changes = false;
+
             foreach (var file in gridDir.GetFiles().Where(s => s.Name.Split('_')[0] == wormholeName))
             {
                 if (file != null && File.Exists(file.FullName))
@@ -314,10 +316,15 @@ namespace Wormhole
                         if (wormholeName == fileTransferInfo.Value.destinationWormhole)
                         {
                             WormholeTransferInFile(file, fileTransferInfo.Value, gatepoint, gate);
+                            changes = true;
                         }
                     }
                 }
             }
+
+            // Saves game on enter if enabled in config.
+            if (changes && Config.SaveOnEnter)
+                Torch.Save();
         }
 
         private void WormholeTransferInFile(FileInfo fileInfo, Utilities.TransferFileInfo fileTransferInfo, Vector3D gatePosition, BoundingSphereD gate)
@@ -428,10 +435,6 @@ namespace Wormhole
                         }
                     }
                 }
-
-                // Saves game on enter if enabled in config.
-                if (Config.SaveOnEnter)
-                    Torch.Save();
 
                 MyVisualScriptLogicProvider.CreateLightning(gatePosition);
             }
