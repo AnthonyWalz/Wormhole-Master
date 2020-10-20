@@ -427,13 +427,12 @@ namespace Wormhole
                             fileInfo.Delete();
                         }
                     }
-
-                    // Saves game on enter if enabled in config.
-                    if (Config.SaveOnEnter)
-                        Torch.Save();
-
-                    MyVisualScriptLogicProvider.CreateLightning(gatepoint);
                 }
+
+                // Saves game on enter if enabled in config.
+                if (Config.SaveOnEnter)
+                    Torch.Save();
+
                 MyVisualScriptLogicProvider.CreateLightning(gatePosition);
             }
         }
