@@ -13,6 +13,7 @@ using VRageMath;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using System.Linq;
+using System.Threading.Tasks;
 using VRage.ObjectBuilders;
 using Sandbox.Common.ObjectBuilders;
 using Torch.Mod;
@@ -36,6 +37,11 @@ namespace Wormhole
         public void Save() => _config.Save();
 
         private int tick = 0;
+
+        // List to be used for entitys to be closed when saving is done.
+        private List<MyCubeGrid> deleteAfterSaveOnExitList = new List<MyCubeGrid>();
+        // The actual task of saving the game on exit
+        private Task saveOnExitTask;
 
         public string admingatesfolder = "admingates";
         public string admingatesconfirmfolder = "admingatesconfirm";
@@ -73,6 +79,12 @@ namespace Wormhole
             base.Update();
             if (++tick == Config.Tick)
             {
+                // Checks if there are entities to be removed
+                if (Config.SaveOnExit  && deleteAfterSaveOnExitList.Count > 0 && !(saveOnExitTask is null) & saveOnExitTask.IsCompleted)
+                {
+                    deleteAfterSaveOnExitList[0].Close();
+                    deleteAfterSaveOnExitList.RemoveAt(0);
+                }
                 tick = 0;
                 try
                 {
@@ -269,7 +281,20 @@ namespace Wormhole
                     player.Character.Close();
                 }
                 if (MyObjectBuilderSerializer.SerializeXML(Utilities.CreateBlueprintPath(Path.Combine(Config.Folder, admingatesfolder), filename), false, builderDefinition))
+                {
+                    // Saves the game if enabled in config.
+                    if (Config.SaveOnExit)
+                    {
+                        // (re)Starts the task if it has never been started o´r is done
+                        if ((saveOnExitTask is null) || saveOnExitTask.IsCompleted)
+                            saveOnExitTask = Torch.Save();
+                        // Adds grids that are to be closed once saving is completed
+                        deleteAfterSaveOnExitList.AddRange(grids);
+                    }
+                    else
+                        grids.ForEach(b => b.Close());
                     grids.ForEach(b => b.Close());
+                }
             }
         }
         public void Wormholetransferin(string wormholeName, Vector3D gatepoint, BoundingSphereD gate)
@@ -402,6 +427,12 @@ namespace Wormhole
                             fileInfo.Delete();
                         }
                     }
+
+                    // Saves game on enter if enabled in config.
+                    if (Config.SaveOnEnter)
+                        Torch.Save();
+
+                    MyVisualScriptLogicProvider.CreateLightning(gatepoint);
                 }
                 MyVisualScriptLogicProvider.CreateLightning(gatePosition);
             }
