@@ -217,6 +217,11 @@ namespace Wormhole
             {
                 var destination = pickeddestination.Split(':');
 
+                if( 3 != destination.Length )
+                {
+                    throw new ArgumentException("failed parsing destination '" + destination + "'");
+                }
+
                 var transferFileInfo = new Utilities.TransferFileInfo
                 {
                     destinationWormhole = destination[0],
