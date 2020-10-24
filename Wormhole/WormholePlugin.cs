@@ -295,7 +295,6 @@ namespace Wormhole
                     }
                     else
                         grids.ForEach(b => b.Close());
-                    grids.ForEach(b => b.Close());
                 }
             }
         }
