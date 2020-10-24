@@ -1,26 +1,25 @@
 ﻿using NLog;
+using Sandbox.Game;
+using Sandbox.Game.World;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.ModAPI;
+using Sandbox.Common.ObjectBuilders;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Controls;
+using System.Linq;
+using System.Threading.Tasks;
 using Torch;
 using Torch.API;
 using Torch.API.Plugins;
+using Torch.Mod;
+using Torch.Mod.Messages;
 using VRageMath;
 using VRage.Game;
 using VRage.Game.ModAPI;
-using System.Linq;
-using System.Threading.Tasks;
 using VRage.ObjectBuilders;
-using Sandbox.Common.ObjectBuilders;
-using Torch.Mod;
-using Torch.Mod.Messages;
-using Sandbox.Game.World;
-using Sandbox.Game;
-using System.Windows.Documents;
 
 namespace Wormhole
 {
