@@ -244,13 +244,14 @@ namespace Wormhole
 
                 definition.CubeGrids = objectBuilders.Select(x => (MyObjectBuilder_CubeGrid)x.Clone()).ToArray();
 
-                List<ulong> playerSteamIds = new List<ulong>();
+                HashSet<ulong> sittingPlayerSteamIds = new HashSet<ulong>();
                 foreach (MyObjectBuilder_CubeGrid cubeGrid in definition.CubeGrids)
                 {
                     foreach (MyObjectBuilder_CubeBlock cubeBlock in cubeGrid.CubeBlocks)
                     {
                         cubeBlock.Owner = 0L;
                         cubeBlock.BuiltBy = 0L;
+
                         if (!Config.ExportProjectorBlueprints)
                         {
                             if (cubeBlock is MyObjectBuilder_ProjectorBase projector)
@@ -263,7 +264,7 @@ namespace Wormhole
                             if (cockpit.Pilot != null)
                             {
                                 var playerSteamId = cockpit.Pilot.PlayerSteamId;
-                                playerSteamIds.Add(playerSteamId);
+                                sittingPlayerSteamIds.Add(playerSteamId);
                                 ModCommunication.SendMessageTo(new JoinServerMessage(destination[1] + ":" + destination[2]), playerSteamId);
                             }
                         }
@@ -272,7 +273,7 @@ namespace Wormhole
 
                 MyObjectBuilder_Definitions builderDefinition = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Definitions>();
                 builderDefinition.ShipBlueprints = new[] { definition };
-                foreach (var playerSteamId in playerSteamIds)
+                foreach (var playerSteamId in sittingPlayerSteamIds)
                 {
                     KillCharacter(playerSteamId);
                 }
