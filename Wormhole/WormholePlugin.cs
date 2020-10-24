@@ -274,10 +274,7 @@ namespace Wormhole
                 builderDefinition.ShipBlueprints = new[] { definition };
                 foreach (var playerSteamId in playerSteamIds)
                 {
-                    var player = Utilities.GetIdentityBySteamId(playerSteamId);
-                    player.Character.EnableBag(false);
-                    MyVisualScriptLogicProvider.SetPlayersHealth(player.IdentityId, 0);
-                    player.Character.Close();
+                    KillCharacter(playerSteamId);
                 }
                 if (MyObjectBuilderSerializer.SerializeXML(Utilities.CreateBlueprintPath(Path.Combine(Config.Folder, admingatesfolder), filename), false, builderDefinition))
                 {
@@ -398,14 +395,11 @@ namespace Wormhole
                             if (pilotIdentity.Character != null)
                             {
                                 // if there is a character, kill it
-                                Log.Info("killing character, steamid: " + pilotSteamId);
                                 if (Config.ThisIp != null && Config.ThisIp != "")
                                 {
                                     ModCommunication.SendMessageTo(new JoinServerMessage(Config.ThisIp), pilotSteamId);
                                 }
-                                pilotIdentity.Character.EnableBag(false);
-                                MyVisualScriptLogicProvider.SetPlayersHealth(pilotIdentityId, 0);
-                                pilotIdentity.Character.Close();
+                                KillCharacter(pilotSteamId);
                             }
                             pilotIdentity.PerformFirstSpawn();
                             pilotIdentity.SavedCharacters.Clear();
@@ -437,6 +431,14 @@ namespace Wormhole
 
                 MyVisualScriptLogicProvider.CreateLightning(gatePosition);
             }
+        }
+        private static void KillCharacter(ulong steamId)
+        {
+            Log.Info("killing character, steamid: " + steamId);
+            var playerIdentity = Utilities.GetIdentityBySteamId(steamId);
+            playerIdentity.Character.EnableBag(false);
+            MyVisualScriptLogicProvider.SetPlayersHealth(playerIdentity.IdentityId, 0);
+            playerIdentity.Character.Close();
         }
     }
 }
