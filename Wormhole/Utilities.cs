@@ -89,15 +89,6 @@ namespace Wormhole
 
             return gridOwner;
         }
-        public static MyIdentity GetIdentityBySteamId(ulong steamId)
-        {
-            var identityId = MySession.Static.Players.TryGetIdentityId(steamId);
-            if (identityId != -1)
-            {
-                return MySession.Static.Players.TryGetIdentity(identityId);
-            }
-            return null;
-        }
         public static List<MyCubeGrid> FindGridList(string gridNameOrEntityId, MyCharacter character, bool includeConnectedGrids)
         {
 

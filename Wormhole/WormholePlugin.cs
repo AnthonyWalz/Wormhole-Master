@@ -328,14 +328,12 @@ namespace Wormhole
         {
             Log.Info("processing filetransfer:" + fileTransferInfo.createLogString());
 
-            var player = Utilities.GetIdentityBySteamId(fileTransferInfo.steamUserId);
-            if (player == null)
+            var playerid = MySession.Static.Players.TryGetIdentityId(fileTransferInfo.steamUserId);
+            if (playerid == -1)
             {
                 Log.Error("couldn't find player with steam id: " + fileTransferInfo.steamUserId);
                 return;
             }
-
-            var playerid = player.IdentityId;
 
             if (!MyObjectBuilderSerializer.DeserializeXML(fileInfo.FullName, out MyObjectBuilder_Definitions myObjectBuilder_Definitions))
             {
@@ -436,10 +434,16 @@ namespace Wormhole
         private static void KillCharacter(ulong steamId)
         {
             Log.Info("killing character, steamid: " + steamId);
-            var playerIdentity = Utilities.GetIdentityBySteamId(steamId);
-            playerIdentity.Character.EnableBag(false);
-            MyVisualScriptLogicProvider.SetPlayersHealth(playerIdentity.IdentityId, 0);
-            playerIdentity.Character.Close();
+
+            var player = MySession.Static.Players.TryGetPlayerBySteamId(steamId);
+            if (player != null)
+            {
+                var playerIdentity = player.Identity;
+                // var playerIdentity = Utilities.GetIdentityBySteamId(steamId);
+                playerIdentity.Character.EnableBag(false);
+                MyVisualScriptLogicProvider.SetPlayersHealth(playerIdentity.IdentityId, 0);
+                playerIdentity.Character.Close();
+            }
         }
     }
 }
