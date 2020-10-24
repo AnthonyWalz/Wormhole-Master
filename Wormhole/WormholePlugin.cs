@@ -294,7 +294,9 @@ namespace Wormhole
                         deleteAfterSaveOnExitList.AddRange(grids);
                     }
                     else
+                    {
                         grids.ForEach(b => b.Close());
+                    }
                 }
             }
         }
@@ -325,7 +327,9 @@ namespace Wormhole
 
             // Saves game on enter if enabled in config.
             if (changes && Config.SaveOnEnter)
+            {
                 Torch.Save();
+            }
         }
 
         private void WormholeTransferInFile(FileInfo fileInfo, Utilities.TransferFileInfo fileTransferInfo, Vector3D gatePosition, BoundingSphereD gate)
