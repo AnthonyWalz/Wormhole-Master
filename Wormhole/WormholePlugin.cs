@@ -447,7 +447,6 @@ namespace Wormhole
             if (player != null)
             {
                 var playerIdentity = player.Identity;
-                // var playerIdentity = Utilities.GetIdentityBySteamId(steamId);
                 playerIdentity.Character.EnableBag(false);
                 MyVisualScriptLogicProvider.SetPlayersHealth(playerIdentity.IdentityId, 0);
                 playerIdentity.Character.Close();
