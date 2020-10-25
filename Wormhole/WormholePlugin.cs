@@ -79,7 +79,7 @@ namespace Wormhole
             if (++tick == Config.Tick)
             {
                 // Checks if there are entities to be removed
-                if (Config.SaveOnExit  && deleteAfterSaveOnExitList.Count > 0 && !(saveOnExitTask is null) & saveOnExitTask.IsCompleted)
+                if (Config.SaveOnExit && deleteAfterSaveOnExitList.Count > 0 && !(saveOnExitTask is null) & saveOnExitTask.IsCompleted)
                 {
                     deleteAfterSaveOnExitList[0].Close();
                     deleteAfterSaveOnExitList.RemoveAt(0);
@@ -217,7 +217,7 @@ namespace Wormhole
             {
                 var destination = pickeddestination.Split(':');
 
-                if( 3 != destination.Length )
+                if (3 != destination.Length)
                 {
                     throw new ArgumentException("failed parsing destination '" + destination + "'");
                 }
@@ -380,7 +380,7 @@ namespace Wormhole
                             block.Owner = playerid;
                         }
 
-                        foreach (MyObjectBuilder_Cockpit cockpit in mygrid.CubeBlocks.Where( block => block is MyObjectBuilder_Cockpit))
+                        foreach (MyObjectBuilder_Cockpit cockpit in mygrid.CubeBlocks.Where(block => block is MyObjectBuilder_Cockpit))
                         {
                             if (cockpit.Pilot == null || !Config.PlayerRespawn)
                             {
