@@ -336,8 +336,8 @@ namespace Wormhole
         {
             Log.Info("processing filetransfer:" + fileTransferInfo.createLogString());
 
-            var playerid = MySession.Static.Players.TryGetIdentityId(fileTransferInfo.steamUserId);
-            if (playerid == -1)
+            var playerid = MySession.Static.Players.TryGetIdentityId(fileTransferInfo.steamUserId); // defaults to 0
+            if (playerid <= 0)
             {
                 Log.Error("couldn't find player with steam id: " + fileTransferInfo.steamUserId);
                 return;
