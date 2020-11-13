@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,11 +22,12 @@ namespace Wormhole {
 
         private void SaveButton_OnClick(object sender, RoutedEventArgs e) {
             Plugin.Save();
+            //Utilities.WormholeGateConfigUpdate();
         }
         private void Add_OnClick(object sender, RoutedEventArgs e)
         {
             if (Xinput.Text != string.Empty && Yinput.Text != string.Empty && Zinput.Text != string.Empty) {
-                var newserver = new WormholeGate() { Name = Nameinput.Text, Description = Descriptioninput.Text, HexColor = HexColorinput.Text, SendTo = SendToinput.Text, X = Convert.ToDouble(Xinput.Text), Y = Convert.ToDouble(Yinput.Text), Z = Convert.ToDouble(Zinput.Text), Rand = Randinput.IsChecked.Value };
+                var newserver = new WormholeGate() { Name = Nameinput.Text, Description = Descriptioninput.Text, HexColor = HexColorinput.Text, SendTo = SendToinput.Text, X = Convert.ToDouble(Xinput.Text), Y = Convert.ToDouble(Yinput.Text), Z = Convert.ToDouble(Zinput.Text)};
                 if (Plugin.Config.WormholeGates.IndexOf(newserver) < 0 && Listservers.Items.IndexOf(newserver) < 0)
                 {
                     Plugin.Config.WormholeGates.Add(newserver);
@@ -37,7 +39,6 @@ namespace Wormhole {
                     Xinput.Text = string.Empty;
                     Yinput.Text = string.Empty;
                     Zinput.Text = string.Empty;
-                    Randinput.IsChecked = false;
                 }
             }
         }
@@ -57,7 +58,6 @@ namespace Wormhole {
                 Xinput.Text = (Listservers.SelectedItem as WormholeGate).X.ToString();
                 Yinput.Text = (Listservers.SelectedItem as WormholeGate).Y.ToString();
                 Zinput.Text = (Listservers.SelectedItem as WormholeGate).Z.ToString();
-                Randinput.IsChecked = (Listservers.SelectedItem as WormholeGate).Rand;
                 Plugin.Config.WormholeGates.Remove(Listservers.SelectedItem as WormholeGate);
                 Listservers.Items.Remove(Listservers.SelectedItem);
             }

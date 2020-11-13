@@ -60,7 +60,18 @@ namespace Wormhole
             grids.Physics.AngularVelocity = new Vector3(0, 0, 0);
             return true;
         }
-
+        public static bool WormholeGateConfigUpdate()
+        {
+            DirectoryInfo Dir = new DirectoryInfo(WormholePlugin.Instance.Config.Folder);
+            foreach (var wormhole in WormholePlugin.Instance.Config.WormholeGates)
+            {
+                Dir.CreateSubdirectory("./" + WormholePlugin.Instance.admingatesconfig + "/" + wormhole.Name);
+                DirectoryInfo configDir = new DirectoryInfo(WormholePlugin.Instance.Config.Folder + "/" + WormholePlugin.Instance.admingatesconfig + "/" + wormhole.Name);
+                configDir.GetFiles().ForEach(b => b.Delete());
+                File.Create(WormholePlugin.Instance.Config.Folder + "/" + WormholePlugin.Instance.admingatesconfig + "/" + wormhole.Name + "/" + WormholePlugin.Instance.Config.ThisIp);
+            }
+            return true;
+        }
         public static string CreateBlueprintPath(string folder, string fileName)
         {
             Directory.CreateDirectory(folder);

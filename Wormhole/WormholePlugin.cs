@@ -37,13 +37,14 @@ namespace Wormhole
 
         private int tick = 0;
 
-        // List to be used for entitys to be closed when saving is done.
-        private List<MyCubeGrid> deleteAfterSaveOnExitList = new List<MyCubeGrid>();
-        // The actual task of saving the game on exit
+        // The actual task of saving the game on exit or enter
         private Task saveOnExitTask;
+        private Task saveOnEnterTask;
 
         public string admingatesfolder = "admingates";
-        public string admingatesconfirmfolder = "admingatesconfirm";
+        public string admingatesconfirmsentfolder = "admingatesconfirmsent";
+        public string admingatesconfirmreceivedfolder = "admingatesconfirmreceived";
+        public string admingatesconfig = "admingatesconfig";
         public override void Init(ITorchBase torch)
         {
             base.Init(torch);
@@ -71,6 +72,7 @@ namespace Wormhole
                 _config = new Persistent<Config>(configFile, new Config());
                 _config.Save();
             }
+            //Utilities.WormholeGateConfigUpdate();
         }
 
         public override void Update()
@@ -78,12 +80,6 @@ namespace Wormhole
             base.Update();
             if (++tick == Config.Tick)
             {
-                // Checks if there are entities to be removed
-                if (Config.SaveOnExit && deleteAfterSaveOnExitList.Count > 0 && !(saveOnExitTask is null) & saveOnExitTask.IsCompleted)
-                {
-                    deleteAfterSaveOnExitList[0].Close();
-                    deleteAfterSaveOnExitList.RemoveAt(0);
-                }
                 tick = 0;
                 try
                 {
@@ -94,10 +90,41 @@ namespace Wormhole
                         Wormholetransferout(wormhole.SendTo, gatepoint, gate);
                         Wormholetransferin(wormhole.Name.Trim(), gatepoint, gate);
                     }
+                    //check transfer status
+                    DirectoryInfo gridDir = new DirectoryInfo(Config.Folder + "/" + admingatesfolder);
+                    DirectoryInfo gridDirsent = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmsentfolder);
+                    DirectoryInfo gridDirreceived = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmreceivedfolder);
+                    foreach(var file in gridDirreceived.GetFiles())
+                    {
+                        //if all other files have been correctly removed then remove safety to stop duplication
+                        if (!File.Exists(gridDirsent.FullName + "/" + file.Name) && !File.Exists(gridDir.FullName + "/" + file.Name))
+                        {
+                            file.Delete();
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
                     Log.Error(e, "Could not run Wormhole");
+                }
+                try
+                {
+                    //check transfer status
+                    DirectoryInfo gridDir = new DirectoryInfo(Config.Folder + "/" + admingatesfolder);
+                    DirectoryInfo gridDirsent = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmsentfolder);
+                    DirectoryInfo gridDirreceived = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmreceivedfolder);
+                    foreach (var file in gridDirreceived.GetFiles())
+                    {
+                        //if all other files have been correctly removed then remove safety to stop duplication
+                        if (!File.Exists(gridDirsent.FullName + "/" + file.Name) && !File.Exists(gridDir.FullName + "/" + file.Name))
+                        {
+                            file.Delete();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    //no issue file might in deletion process
                 }
             }
         }
@@ -287,32 +314,40 @@ namespace Wormhole
                     // Saves the game if enabled in config.
                     if (Config.SaveOnExit)
                     {
+                        grids.ForEach(b => b.Close());
                         // (re)Starts the task if it has never been started o´r is done
                         if ((saveOnExitTask is null) || saveOnExitTask.IsCompleted)
                             saveOnExitTask = Torch.Save();
-                        // Adds grids that are to be closed once saving is completed
-                        deleteAfterSaveOnExitList.AddRange(grids);
                     }
                     else
                     {
                         grids.ForEach(b => b.Close());
                     }
+                    DirectoryInfo gridDirsent = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmsentfolder);
+                    //creates just in case fir send
+                    gridDirsent.Create();
+                    File.Create(Utilities.CreateBlueprintPath(gridDirsent.FullName, filename));
                 }
             }
         }
         public void Wormholetransferin(string wormholeName, Vector3D gatepoint, BoundingSphereD gate)
         {
             DirectoryInfo gridDir = new DirectoryInfo(Config.Folder + "/" + admingatesfolder);
+            DirectoryInfo gridDirsent = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmsentfolder);
+            DirectoryInfo gridDirreceived = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmreceivedfolder);
+            gridDirreceived.Create();
 
-            if (!gridDir.Exists)
+            if (!gridDir.Exists || !gridDirsent.Exists)
                 return;
 
             var changes = false;
 
             foreach (var file in gridDir.GetFiles().Where(s => s.Name.Split('_')[0] == wormholeName))
             {
-                if (file != null && File.Exists(file.FullName))
+                //if file not null if file exists if file is done being sent and if file hasnt been received before
+                if (file != null && File.Exists(file.FullName) && File.Exists(gridDirsent.FullName + "/" + file.Name) && !File.Exists(gridDirreceived.FullName + "/" + file.Name))
                 {
+                    Log.Info("here 2");
                     var fileTransferInfo = Utilities.TransferFileInfo.parseFileName(file.Name);
                     if (fileTransferInfo.HasValue)
                     {
@@ -320,6 +355,8 @@ namespace Wormhole
                         {
                             WormholeTransferInFile(file, fileTransferInfo.Value, gatepoint, gate);
                             changes = true;
+                            File.Delete(gridDirsent.FullName + "/" + file.Name);
+                            File.Create(gridDirreceived.FullName + "/" + file.Name);
                         }
                     }
                 }
@@ -328,7 +365,10 @@ namespace Wormhole
             // Saves game on enter if enabled in config.
             if (changes && Config.SaveOnEnter)
             {
-                Torch.Save();
+
+                // (re)Starts the task if it has never been started o´r is done
+                if ((saveOnEnterTask is null) || saveOnEnterTask.IsCompleted)
+                    saveOnEnterTask = Torch.Save();
             }
         }
 
