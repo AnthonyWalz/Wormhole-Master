@@ -1,8 +1,8 @@
 ﻿using NLog;
 using Sandbox;
+using Sandbox.Game.World;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
-using Sandbox.Game.World;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -25,40 +25,29 @@ namespace Wormhole
         public static bool UpdateGridsPositionAndStop(MyObjectBuilder_CubeGrid[] grids, Vector3D newPosition)
         {
             bool firstGrid = true;
-            double deltaX = 0;
-            double deltaY = 0;
-            double deltaZ = 0;
+            Vector3D delta_NewPos_Grid0Pos = new Vector3D(0, 0, 0);
 
             foreach (var grid in grids)
             {
-                var position = grid.PositionAndOrientation;
-                if (position == null)
+                if (grid.PositionAndOrientation == null)
                 {
                     Log.Warn("Position and Orientation Information missing from Grid in file.");
                     return false;
                 }
-                var realPosition = position.Value;
-                var currentPosition = realPosition.Position;
+                var gridPositionOrientation = grid.PositionAndOrientation.Value;
                 if (firstGrid)
                 {
-                    deltaX = newPosition.X - currentPosition.X;
-                    deltaY = newPosition.Y - currentPosition.Y;
-                    deltaZ = newPosition.Z - currentPosition.Z;
-
-                    currentPosition.X = newPosition.X;
-                    currentPosition.Y = newPosition.Y;
-                    currentPosition.Z = newPosition.Z;
-
+                    delta_NewPos_Grid0Pos = newPosition - gridPositionOrientation.Position;
+                    gridPositionOrientation.Position = newPosition;
                     firstGrid = false;
                 }
                 else
                 {
-                    currentPosition.X += deltaX;
-                    currentPosition.Y += deltaY;
-                    currentPosition.Z += deltaZ;
+                    gridPositionOrientation.Position += delta_NewPos_Grid0Pos;
                 }
-                realPosition.Position = currentPosition;
-                grid.PositionAndOrientation = realPosition;
+                grid.PositionAndOrientation = gridPositionOrientation;
+
+                // reset velocity
                 grid.AngularVelocity = new SerializableVector3();
                 grid.LinearVelocity = new SerializableVector3();
             }
@@ -99,26 +88,6 @@ namespace Wormhole
                 return gridOwnerList[1];
 
             return gridOwner;
-        }
-        public static MyIdentity GetIdentityByNameOrId(string playerNameOrSteamId)
-        {
-
-            foreach (var identity in MySession.Static.Players.GetAllIdentities())
-            {
-
-                if (identity.DisplayName == playerNameOrSteamId)
-                    return identity;
-
-                if (ulong.TryParse(playerNameOrSteamId, out ulong steamId))
-                {
-
-                    ulong id = MySession.Static.Players.TryGetSteamId(identity.IdentityId);
-                    if (id == steamId)
-                        return identity;
-                }
-            }
-
-            return null;
         }
         public static List<MyCubeGrid> FindGridList(string gridNameOrEntityId, MyCharacter character, bool includeConnectedGrids)
         {
@@ -190,7 +159,8 @@ namespace Wormhole
         {
 
             ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> groups = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group>();
-            Parallel.ForEach(MyCubeGridGroups.Static.Mechanical.Groups, group => {
+            Parallel.ForEach(MyCubeGridGroups.Static.Mechanical.Groups, group =>
+            {
 
                 foreach (MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Node groupNodes in group.Nodes)
                 {
@@ -287,7 +257,8 @@ namespace Wormhole
         {
 
             var groups = new ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group>();
-            Parallel.ForEach(MyCubeGridGroups.Static.Physical.Groups, group => {
+            Parallel.ForEach(MyCubeGridGroups.Static.Physical.Groups, group =>
+            {
 
                 foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes)
                 {
@@ -422,6 +393,59 @@ namespace Wormhole
                     gridradius = newRadius;
             }
             return (float)(new BoundingSphereD(vector.Value, gridradius)).Radius;
+        }
+
+        // parsing helper
+        public struct TransferFileInfo
+        {
+            public string destinationWormhole;
+            public ulong steamUserId;
+            public string playerName;
+            public string gridName;
+            public DateTime time;
+            public static TransferFileInfo? parseFileName(string path)
+            {
+                TransferFileInfo info;
+                var pathItems = path.Split('_');
+                if (pathItems.Count() != 10)
+                {
+                    return null;
+                }
+                else
+                {
+                    info.destinationWormhole = pathItems[0];
+                    info.steamUserId = ulong.Parse(pathItems[1]);
+                    info.playerName = pathItems[2];
+                    info.gridName = pathItems[3];
+
+                    var year = int.Parse(pathItems[4]);
+                    var month = int.Parse(pathItems[5]);
+                    var day = int.Parse(pathItems[6]);
+                    var hour = int.Parse(pathItems[7]);
+                    var minute = int.Parse(pathItems[8]);
+
+                    var lastPart = pathItems[9];
+                    if (lastPart.EndsWith(".sbc"))
+                    {
+                        lastPart = lastPart.Substring(0, lastPart.Length - 4);
+                    }
+                    var second = int.Parse(lastPart);
+
+
+                    info.time = new DateTime(year, month, day, hour, minute, second);
+
+                    return info;
+                }
+            }
+
+            public string createLogString()
+            {
+                return $"dest: {destinationWormhole};steamid: {steamUserId};playername: {playerName};gridName: {gridName};time:{time:yyyy_MM_dd_HH_mm_ss};";
+            }
+            public string createFileName()
+            {
+                return $"{destinationWormhole}_{steamUserId}_{Utilities.LegalCharOnly(playerName)}_{Utilities.LegalCharOnly(gridName)}_{time:yyyy_MM_dd_HH_mm_ss}";
+            }
         }
     }
 }
