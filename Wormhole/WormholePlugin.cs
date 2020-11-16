@@ -90,18 +90,6 @@ namespace Wormhole
                         Wormholetransferout(wormhole.SendTo, gatepoint, gate);
                         Wormholetransferin(wormhole.Name.Trim(), gatepoint, gate);
                     }
-                    //check transfer status
-                    DirectoryInfo gridDir = new DirectoryInfo(Config.Folder + "/" + admingatesfolder);
-                    DirectoryInfo gridDirsent = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmsentfolder);
-                    DirectoryInfo gridDirreceived = new DirectoryInfo(Config.Folder + "/" + admingatesconfirmreceivedfolder);
-                    foreach(var file in gridDirreceived.GetFiles())
-                    {
-                        //if all other files have been correctly removed then remove safety to stop duplication
-                        if (!File.Exists(gridDirsent.FullName + "/" + file.Name) && !File.Exists(gridDir.FullName + "/" + file.Name))
-                        {
-                            file.Delete();
-                        }
-                    }
                 }
                 catch (Exception e)
                 {
@@ -122,7 +110,7 @@ namespace Wormhole
                         }
                     }
                 }
-                catch (Exception e)
+                catch
                 {
                     //no issue file might in deletion process
                 }
