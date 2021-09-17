@@ -208,7 +208,6 @@ namespace Wormhole
             public string GridName;
             public string PlayerName;
             public ulong SteamUserId;
-            public DateTime Time;
 
             public static TransferFileInfo ParseFileName(string path)
             {
@@ -219,20 +218,10 @@ namespace Wormhole
                 info.DestinationWormhole = pathItems[0];
                 info.SteamUserId = ulong.Parse(pathItems[1]);
                 info.PlayerName = pathItems[2];
-                info.GridName = pathItems[3];
 
-                var year = int.Parse(pathItems[4]);
-                var month = int.Parse(pathItems[5]);
-                var day = int.Parse(pathItems[6]);
-                var hour = int.Parse(pathItems[7]);
-                var minute = int.Parse(pathItems[8]);
-
-                var lastPart = pathItems[9];
-                if (lastPart.EndsWith(".sbc")) lastPart = lastPart.Substring(0, lastPart.Length - 4);
-                var second = int.Parse(lastPart);
-
-
-                info.Time = new (year, month, day, hour, minute, second);
+                var lastPart = pathItems[3];
+                if (lastPart.EndsWith(".sbcB5")) lastPart = lastPart.Substring(0, lastPart.Length - ".sbcB5".Length);
+                info.GridName = lastPart;
 
                 return info;
             }
@@ -240,13 +229,13 @@ namespace Wormhole
             public string CreateLogString()
             {
                 return
-                    $"dest: {DestinationWormhole};steamid: {SteamUserId};playername: {PlayerName};gridName: {GridName};time:{Time:yyyy_MM_dd_HH_mm_ss};";
+                    $"dest: {DestinationWormhole};steamid: {SteamUserId};playername: {PlayerName};gridName: {GridName};";
             }
 
             public string CreateFileName()
             {
                 return
-                    $"{DestinationWormhole}_{SteamUserId}_{LegalCharOnly(PlayerName)}_{LegalCharOnly(GridName)}_{Time:yyyy_MM_dd_HH_mm_ss}";
+                    $"{DestinationWormhole}_{SteamUserId}_{LegalCharOnly(PlayerName)}_{LegalCharOnly(GridName)}";
             }
         }
     }

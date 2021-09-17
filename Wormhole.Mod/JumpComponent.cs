@@ -17,6 +17,7 @@ namespace Wormhole.Mod
     {
         private static readonly MySoundPair ChargeSound = new MySoundPair("WormholeJumpCharge");
         private static readonly MySoundPair JumpSound = new MySoundPair("WormholeJumpPerform");
+        private static readonly MySoundPair AfterSound = new MySoundPair("WormholeJumpAfter");
         
         private readonly Dictionary<uint, GateDataMessage> _gates = new Dictionary<uint, GateDataMessage>();
         private readonly MyEntity3DSoundEmitter _soundEmitter = new MyEntity3DSoundEmitter(null);
@@ -68,6 +69,9 @@ namespace Wormhole.Mod
                 case JumpStatus.Started:
                     OnJumpStarted(gate, grid);
                     break;
+                case JumpStatus.Ready:
+                    OnJumpReady(gate, grid);
+                    break;
                 case JumpStatus.Perform:
                     OnJumpPerform(gate, grid, message.Destination);
                     break;
@@ -102,10 +106,13 @@ namespace Wormhole.Mod
             //         position: gate.Position + gate.Forward * (gate.Size * 2));
             // }
         }
-        private void OnJumpPerform(GateDataMessage gate, IMyCubeGrid grid, Vector3D destination)
+
+        private void OnJumpReady(GateDataMessage gate, IMyCubeGrid grid)
         {
             _soundEmitter.PlaySound(JumpSound, true);
-            
+        }
+        private void OnJumpPerform(GateDataMessage gate, IMyCubeGrid grid, Vector3D destination)
+        {
             if (Vector3D.IsZero(destination)) return;
             var matrix = grid.WorldMatrix;
             matrix.Translation = destination;
@@ -120,6 +127,11 @@ namespace Wormhole.Mod
         private void OnJumpSucceeded(GateDataMessage gate, IMyCubeGrid grid)
         {
             _gateVisuals.DisableEffectForGate(gate.Id);
+            if (MyAPIGateway.Session.ControlledObject is IMyShipController &&
+                ((IMyShipController)MyAPIGateway.Session.ControlledObject).CubeGrid == grid)
+            {
+                _soundEmitter.PlaySound(AfterSound, true);
+            }
         }
 
         private void OnGatesData(IEnumerable<GateDataMessage> gates)

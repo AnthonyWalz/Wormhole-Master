@@ -3,6 +3,7 @@
     public enum JumpStatus
     {
         Started,
+        Ready,
         Perform,
         Succeeded
     }

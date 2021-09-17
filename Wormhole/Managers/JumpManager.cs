@@ -25,7 +25,9 @@ namespace Wormhole.Managers
             MyVisualScriptLogicProvider.ShowNotification("Opening the gate...",
                 (int) TimeSpan.FromSeconds(4).TotalMilliseconds, playerId: player.Identity.IdentityId);
             _effectsManager.NotifyJumpStatusChanged(JumpStatus.Started, gate, grid);
-            await Task.Delay(TimeSpan.FromSeconds(15));
+            await Task.Delay(TimeSpan.FromSeconds(12));
+            _effectsManager.NotifyJumpStatusChanged(JumpStatus.Ready, gate, grid);
+            await Task.Delay(TimeSpan.FromSeconds(3));
         }
     }
 }

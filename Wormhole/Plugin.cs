@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -43,7 +44,7 @@ namespace Wormhole
 
         private Gui _control;
 
-        public const string AdminGatesConfig = "admingatesconfig";
+        // public const string AdminGatesConfig = "admingatesconfig";
 
         // private const string AdminGatesConfirmReceivedFolder = "admingatesconfirmreceived";
         // private const string AdminGatesConfirmSentFolder = "admingatesconfirmsent";
@@ -239,7 +240,7 @@ namespace Wormhole
 
                         if (freePos is null)
                             return;
-                        
+
                         _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Perform, gate, grid, freePos);
 
                         MyVisualScriptLogicProvider.CreateLightning(gatePoint);
@@ -258,15 +259,14 @@ namespace Wormhole
                             DestinationWormhole = destination[0],
                             SteamUserId = playerInCharge.Id.SteamId,
                             PlayerName = playerInCharge.DisplayName,
-                            GridName = grid.DisplayName,
-                            Time = DateTime.Now
+                            GridName = grid.DisplayName
                         };
 
                         Log.Info("creating filetransfer:" + transferFileInfo.CreateLogString());
                         var filename = transferFileInfo.CreateFileName();
 
                         _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Perform, gate, grid);
-                        
+
                         MyVisualScriptLogicProvider.CreateLightning(gatePoint);
 
                         var objectBuilders = new List<MyObjectBuilder_CubeGrid>();
@@ -308,7 +308,8 @@ namespace Wormhole
                         using (var stream =
                             File.Create(Utilities.CreateBlueprintPath(Path.Combine(Config.Folder, AdminGatesFolder),
                                 filename)))
-                            Serializer.Serialize(stream, new TransferFile
+                        using (var compressStream = new GZipStream(stream, CompressionMode.Compress))
+                            Serializer.Serialize(compressStream, new TransferFile
                             {
                                 Grids = objectBuilders,
                                 IdentitiesMap = identitiesMap,
@@ -361,7 +362,9 @@ namespace Wormhole
                 try
                 {
                     using var stream = File.OpenRead(file);
-                    transferFile = Serializer.Deserialize<TransferFile>(stream);
+                    using var decompressStream = new GZipStream(stream, CompressionMode.Decompress);
+
+                    transferFile = Serializer.Deserialize<TransferFile>(decompressStream);
                     if (transferFile.Grids is null || transferFile.IdentitiesMap is null)
                         throw new InvalidOperationException("File is empty or invalid");
                 }

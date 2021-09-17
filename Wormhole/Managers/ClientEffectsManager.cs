@@ -40,7 +40,8 @@ namespace Wormhole.Managers
             Torch.GameStateChanged -= TorchOnGameStateChanged;
         }
 
-        public void NotifyJumpStatusChanged(JumpStatus status, WormholeGate gate, MyCubeGrid grid, Vector3D? destination = null)
+        public void NotifyJumpStatusChanged(JumpStatus status, WormholeGate gate, MyCubeGrid grid,
+            Vector3D? destination = null)
         {
             var message = new JumpStatusMessage
             {
@@ -49,12 +50,12 @@ namespace Wormhole.Managers
                 GridId = grid.EntityId,
                 Destination = destination ?? _visualData[gate].Destination
             };
-            
+
             MyAPIGateway.Multiplayer.SendMessageToOthers(JumpStatusNetId,
                 MyAPIGateway.Utilities.SerializeToBinary(message));
         }
 
-        
+
         public void RecalculateVisualData()
         {
             if (Torch.GameState != TorchGameState.Loaded) return;
@@ -104,8 +105,9 @@ namespace Wormhole.Managers
                 _visualData[wormholeGate] = visual;
                 _message.Messages.Add(visual);
             }
-            
-            MyAPIGateway.Multiplayer.SendMessageToOthers(GateDataNetId, MyAPIGateway.Utilities.SerializeToBinary(_message));
+
+            MyAPIGateway.Multiplayer.SendMessageToOthers(GateDataNetId,
+                MyAPIGateway.Utilities.SerializeToBinary(_message));
         }
 
         private void TorchOnGameStateChanged(MySandboxGame game, TorchGameState newState)
