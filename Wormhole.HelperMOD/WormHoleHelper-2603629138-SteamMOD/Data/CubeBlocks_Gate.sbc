@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CubeBlocks>
+    <Definition xsi:type="MyObjectBuilder_BeaconDefinition">
+      <Id>
+        <TypeId>Beacon</TypeId>
+        <SubtypeId>Wormhole</SubtypeId>
+      </Id>
+      <Public>false</Public>
+      <DisplayName>DisplayName_Block_Wormhole</DisplayName>
+      <Icon>Textures\GUI\Supergate.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0.1" StartY="0.1" EndX="0.9" EndY="0.9" Default="true" />
+        <MountPoint Side="Top" StartX="0.1" StartY="0.1" EndX="0.9" EndY="0.9" />
+        <MountPoint Side="Left" StartX="0.175" StartY="0.1" EndX="0.825" EndY="0.9" />
+        <MountPoint Side="Right" StartX="0.175" StartY="0.1" EndX="0.825" EndY="0.9" />
+        <MountPoint Side="Front" StartX="0.175" StartY="0.1" EndX="0.825" EndY="0.9" />
+        <MountPoint Side="Back" StartX="0.175" StartY="0.1" EndX="0.825" EndY="0.9" />
+      </MountPoints>
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Blocks\Supergate.mwm</Model>
+      <Components>
+        <Component Subtype="admingate" Count="10" />
+        <Component Subtype="SteelPlate" Count="40" />
+      </Components>
+      <CriticalComponent Subtype="admingate" Index="0" />
+      <BlockPairName>Wormhole</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <PrimarySound>SupergateActive</PrimarySound>
+      <MaxBroadcastRadius>500000</MaxBroadcastRadius>
+      <MaxBroadcastPowerDrainkW>0</MaxBroadcastPowerDrainkW>
+      <BroadcastRadius>500000</BroadcastRadius>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <PrimarySound>ParticleHeavyMech</PrimarySound>
+      <BuildTimeSeconds>800</BuildTimeSeconds>
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="79" StartY="0" EndX="81" EndY="2" />
+      </MountPoints>
+      <Description>Empty</Description>
+    </Definition>
+  </CubeBlocks>
+</Definitions>

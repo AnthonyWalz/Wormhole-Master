@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CubeBlocks>
+    <Definition xsi:type="MyObjectBuilder_JumpDriveDefinition">
+      <Id>
+        <TypeId>JumpDrive</TypeId>
+        <SubtypeId>WormholeDrive</SubtypeId>
+      </Id>
+      <DisplayName>Large Wormhole Jump Drive</DisplayName>
+      <Icon>Textures\Icons\SouperJumpDrive.dds</Icon>
+      <Description>Stabilizes Wormhole to allow safe travel.</Description>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="3" y="2" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\SouperJumpDrive_Large.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="150" />
+        <Component Subtype="GravityGenerator" Count="20" />
+        <Component Subtype="Detector" Count="20" />
+        <Component Subtype="PowerCell" Count="120" />
+        <Component Subtype="Superconductor" Count="1000" />
+        <Component Subtype="Computer" Count="300" />
+        <Component Subtype="MetalGrid" Count="50" />
+        <Component Subtype="SteelPlate" Count="20" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Top" StartX="0.01" StartY="0.03" EndX="0.95" EndY="0.97" />
+        <MountPoint Side="Bottom" StartX="2.04" StartY="0.03" EndX="2.98" EndY="0.97" />
+        <MountPoint Side="Bottom" StartX="0.01" StartY="0.03" EndX="2.04" EndY="0.97" />
+        <MountPoint Side="Top" StartX="0.95" StartY="0.03" EndX="2.98" EndY="0.97" />
+      </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\SouperJumpDrive_Large_Constr1.mwm" />
+        <Model BuildPercentUpperBound="0.67" File="Models\Cubes\SouperJumpDrive_Large_Constr2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\SouperJumpDrive_Large_Constr3.mwm" />
+      </BuildProgressModels>
+      <BlockPairName>WormholeDrive</BlockPairName>
+      <MirroringY>Z</MirroringY>
+      <MirroringZ>Y</MirroringZ>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>120</BuildTimeSeconds>
+      <DamageEffectName>Damage_WeapExpl_Damaged</DamageEffectName>
+      <DamagedSound>ParticleWeapExpl</DamagedSound>
+      <ResourceSinkGroup>Charging</ResourceSinkGroup>
+      <RequiredPowerInput>600</RequiredPowerInput>
+      <PowerNeededForJump>3</PowerNeededForJump>
+      <MaxJumpDistance>0</MaxJumpDistance>
+      <MaxJumpMass>0</MaxJumpMass>
+      <EmissiveColorPreset>Extended</EmissiveColorPreset>
+      <DestroyEffect>Explosion_Warhead_30</DestroyEffect>
+      <DestroySound>WepLrgWarheadExpl</DestroySound>
+      <PCU>100</PCU>
+      <IsAirTight>false</IsAirTight>
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_JumpDriveDefinition">
+      <Id>
+        <TypeId>JumpDrive</TypeId>
+        <SubtypeId>WormholeDrive_Small</SubtypeId>
+      </Id>
+      <DisplayName>Small Wormhole Jump Drive</DisplayName>
+      <Icon>Textures\Icons\SouperJumpDrive.dds</Icon>
+      <Description>Stabilizes Wormhole to allow safe travel.</Description>
+      <CubeSize>Small</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="3" y="2" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\SouperJumpDrive_Small.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="50" />
+        <Component Subtype="GravityGenerator" Count="5" />
+        <Component Subtype="Detector" Count="20" />
+        <Component Subtype="PowerCell" Count="50" />
+        <Component Subtype="Superconductor" Count="500" />
+        <Component Subtype="Computer" Count="150" />
+        <Component Subtype="MetalGrid" Count="20" />
+        <Component Subtype="SteelPlate" Count="10" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Top" StartX="0.01" StartY="0.03" EndX="0.95" EndY="0.97" />
+        <MountPoint Side="Bottom" StartX="2.04" StartY="0.03" EndX="2.98" EndY="0.97" />
+        <MountPoint Side="Bottom" StartX="0.01" StartY="0.03" EndX="2.04" EndY="0.97" />
+        <MountPoint Side="Top" StartX="0.95" StartY="0.03" EndX="2.98" EndY="0.97" />
+      </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\SouperJumpDrive_Small_Constr1.mwm" />
+        <Model BuildPercentUpperBound="0.67" File="Models\Cubes\SouperJumpDrive_Small_Constr2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\SouperJumpDrive_Small_Constr3.mwm" />
+      </BuildProgressModels>
+      <BlockPairName>WormholeDrive</BlockPairName>
+      <MirroringY>Z</MirroringY>
+      <MirroringZ>Y</MirroringZ>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>120</BuildTimeSeconds>
+      <DamageEffectName>Damage_WeapExpl_Damaged</DamageEffectName>
+      <DamagedSound>ParticleWeapExpl</DamagedSound>
+      <ResourceSinkGroup>Charging</ResourceSinkGroup>
+      <RequiredPowerInput>32</RequiredPowerInput>
+      <PowerNeededForJump>3</PowerNeededForJump>
+      <MaxJumpDistance>0</MaxJumpDistance>
+      <MaxJumpMass>0</MaxJumpMass>
+      <EmissiveColorPreset>Extended</EmissiveColorPreset>
+      <DestroyEffect>Explosion_Warhead_30</DestroyEffect>
+      <DestroySound>WepLrgWarheadExpl</DestroySound>
+      <PCU>100</PCU>
+      <IsAirTight>false</IsAirTight>
+    </Definition>
+  </CubeBlocks>
+</Definitions>
