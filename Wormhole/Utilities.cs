@@ -213,7 +213,7 @@ namespace Wormhole
             {
                 TransferFileInfo info = new ();
                 var pathItems = path.Split('_');
-                if (pathItems.Length != 10) return null;
+                if (pathItems.Length != 4) return null;
 
                 info.DestinationWormhole = pathItems[0];
                 info.SteamUserId = ulong.Parse(pathItems[1]);
