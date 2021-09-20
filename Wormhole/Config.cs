@@ -3,12 +3,13 @@ using System.Xml.Serialization;
 using Torch;
 using Torch.Collections;
 using Torch.Views;
+using Wormhole.ViewModels;
 
 namespace Wormhole
 {
     public class Config : ViewModel
     {
-        [XmlElement("WormholeGate")] public MtObservableList<WormholeGate> WormholeGates { get; set; } = new ();
+        [XmlArrayItem("Gate")] public MtObservableList<GateViewModel> WormholeGates { get; set; } = new ();
 
         [Display(Name = "Save Server On Grid Exit", Description = "Warning! May Cause Lag")]
         public bool SaveOnExit { get; set; }
@@ -19,7 +20,7 @@ namespace Wormhole
         [Display(Name = "Allow Faction Members")]
         public bool AllowInFaction { get; set; }
 
-        [Display(Name = "Keep Connected Grids", Description = "Keep grids linked by connector")]
+        [Display(Name = "Keep Connected Grids", Description = "Keep grids linked by connector/landing gear")]
         public bool IncludeConnectedGrids { get; set; } = true;
 
         [Display(Name = "Keep projector blueprints")]
@@ -28,7 +29,7 @@ namespace Wormhole
         [Display(Name = "JumpDrive SubtypeId", Description = "SubtypeId of your jump drive/wormhole stabilizer")]
         public string JumpDriveSubId { get; set; } = "WormholeDrive";
 
-        [Display(Name = "Server IP:Port (for reconnecting)")]
+        [Display(Name = "Current Server IP:Port (domains also works)")]
         public string ThisIp { get; set; } = string.Empty;
 
         public double GateRadius { get; set; } = 180;
@@ -51,8 +52,5 @@ namespace Wormhole
             Description =
                 "Keep ownership & builtBy on blocks. If false, all blocks will be transferred to player that requested jump")]
         public bool KeepOwnership { get; set; }
-
-        [Display(Name = "Gate Visuals", Description = "Gate visual effects on jump")]
-        public bool GateVisuals { get; set; } = false;
     }
 }

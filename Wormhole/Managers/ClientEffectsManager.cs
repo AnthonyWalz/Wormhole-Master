@@ -12,6 +12,7 @@ using Torch.Managers;
 using VRage.Game.Entity;
 using VRage.Security;
 using VRageMath;
+using Wormhole.ViewModels;
 
 namespace Wormhole.Managers
 {
@@ -21,7 +22,6 @@ namespace Wormhole.Managers
         private const ushort GateDataNetId = 3457;
         private const string ParticleDefaultId = "p_subspace_start";
 
-        private readonly Dictionary<WormholeGate, GateDataMessage> _visualData = new ();
         private readonly GatesMessage _message = new ();
 
         public ClientEffectsManager(ITorchBase torchInstance) : base(torchInstance)
@@ -40,15 +40,15 @@ namespace Wormhole.Managers
             Torch.GameStateChanged -= TorchOnGameStateChanged;
         }
 
-        public void NotifyJumpStatusChanged(JumpStatus status, WormholeGate gate, MyCubeGrid grid,
+        public void NotifyJumpStatusChanged(JumpStatus status, GateViewModel gateViewModel, MyCubeGrid grid,
             Vector3D? destination = null)
         {
             var message = new JumpStatusMessage
             {
                 Status = status,
-                GateId = gate.Id,
+                GateId = gateViewModel.Id,
                 GridId = grid.EntityId,
-                Destination = destination ?? _visualData[gate].Destination
+                Destination = destination ?? default
             };
 
             MyAPIGateway.Multiplayer.SendMessageToOthers(JumpStatusNetId,
@@ -60,7 +60,6 @@ namespace Wormhole.Managers
         {
             if (Torch.GameState != TorchGameState.Loaded) return;
 
-            _visualData.Clear();
             _message.Messages.Clear();
             var config = Plugin.Instance.Config;
             var entities = new List<MyEntity>();
@@ -74,10 +73,14 @@ namespace Wormhole.Managers
                 var gate = entities.OfType<MyCubeGrid>()
                     .FirstOrDefault(static b => b.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]"));
 
-                var destinationName = wormholeGate.SendTo.Split(':')[0];
-
                 GateDataMessage visual;
 
+                var destinations = wormholeGate.Destinations.Select(static b => new DestinationData
+                {
+                    Id = b.Id,
+                    DisplayName = b.DisplayName
+                }).ToList();
+                
                 if (gate is { })
                     visual = new ()
                     {
@@ -86,8 +89,7 @@ namespace Wormhole.Managers
                         Forward = gate.PositionComp.WorldMatrixRef.Forward,
                         Size = (float) config.GateRadius,
                         ParticleId = ParticleDefaultId,
-                        Destination = config.WormholeGates.FirstOrDefault(b => b.Name == destinationName)?.Position ??
-                                      Vector3D.Zero
+                        Destinations = destinations
                     };
                 else
                     visual = new ()
@@ -97,12 +99,10 @@ namespace Wormhole.Managers
                         Forward = Vector3D.Forward,
                         Size = (float) config.GateRadius,
                         ParticleId = ParticleDefaultId,
-                        Destination = config.WormholeGates.FirstOrDefault(b => b.Name == destinationName)?.Position ??
-                                      Vector3D.Zero
+                        Destinations = destinations
                     };
 
                 visual.Size = (float) config.GateRadius;
-                _visualData[wormholeGate] = visual;
                 _message.Messages.Add(visual);
             }
 

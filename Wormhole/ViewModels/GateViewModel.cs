@@ -1,19 +1,21 @@
-﻿using System.Windows.Media;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 using Sandbox.Game.Screens.Helpers;
+using Torch;
+using Torch.Collections;
 using Torch.Utils;
 using VRage.Security;
 using VRageMath;
 
-namespace Wormhole
+namespace Wormhole.ViewModels
 {
-    public class WormholeGate
+    public class GateViewModel : ViewModel
     {
         private uint? _id;
         public string Name { get; set; }
         public string Description { get; set; }
         public string HexColor { get; set; }
-        public string SendTo { get; set; }
+        [XmlArrayItem("Destination")]
+        public MtObservableList<DestinationViewModel> Destinations { get; set; } = new ();
         public double X { get; set; }
         public double Y { get; set; }
         public double Z { get; set; }

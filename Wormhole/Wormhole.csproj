@@ -159,21 +159,29 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Managers\ClientEffectsManager.cs" />
+    <Compile Include="Managers\DestinationManager.cs" />
     <Compile Include="Managers\GateDataMessage.cs" />
     <Compile Include="Managers\GatesMessage.cs" />
     <Compile Include="Managers\JumpManager.cs" />
     <Compile Include="Managers\JumpStatus.cs" />
     <Compile Include="Managers\JumpStatusMessage.cs" />
+    <Compile Include="Managers\WormholeDiscoveryManager.cs" />
     <Compile Include="Request.cs" />
     <Compile Include="TransferFile.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Config.cs" />
-    <Compile Include="Gate.cs" />
-    <Compile Include="Gui.xaml.cs">
+    <Compile Include="Plugin.cs" />
+    <Compile Include="ViewModels\DestinationViewModel.cs" />
+    <Compile Include="ViewModels\GateViewModel.cs" />
+    <Compile Include="Views\Converters\DestinationConverter.cs" />
+    <Compile Include="Views\Converters\EnumItemsSource.cs" />
+    <Compile Include="Views\DestinationsEditor.xaml.cs">
+      <DependentUpon>DestinationsEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Gui.xaml.cs">
       <DependentUpon>Gui.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugin.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.xml">
@@ -181,7 +189,8 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Gui.xaml">
+    <Page Include="Views\DestinationsEditor.xaml" />
+    <Page Include="Views\Gui.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

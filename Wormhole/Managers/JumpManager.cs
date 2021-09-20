@@ -8,6 +8,7 @@ using Sandbox.Game.World;
 using Torch.API;
 using Torch.Managers;
 using Torch.Utils;
+using Wormhole.ViewModels;
 
 namespace Wormhole.Managers
 {
@@ -19,14 +20,14 @@ namespace Wormhole.Managers
         {
         }
 
-        public async Task StartJump(WormholeGate gate, MyPlayer player, MyCubeGrid grid)
+        public async Task StartJump(GateViewModel gateViewModel, MyPlayer player, MyCubeGrid grid)
         {
             // TODO hyper jump effect
             MyVisualScriptLogicProvider.ShowNotification("Opening the gate...",
                 (int) TimeSpan.FromSeconds(4).TotalMilliseconds, playerId: player.Identity.IdentityId);
-            _effectsManager.NotifyJumpStatusChanged(JumpStatus.Started, gate, grid);
+            _effectsManager.NotifyJumpStatusChanged(JumpStatus.Started, gateViewModel, grid);
             await Task.Delay(TimeSpan.FromSeconds(12));
-            _effectsManager.NotifyJumpStatusChanged(JumpStatus.Ready, gate, grid);
+            _effectsManager.NotifyJumpStatusChanged(JumpStatus.Ready, gateViewModel, grid);
             await Task.Delay(TimeSpan.FromSeconds(3));
         }
     }

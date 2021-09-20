@@ -1,11 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using Wormhole.ViewModels;
 
-namespace Wormhole
+namespace Wormhole.Views
 {
     public partial class Gui : UserControl
     {
@@ -18,10 +17,10 @@ namespace Wormhole
         {
             Plugin = plugin;
             DataContext = plugin.Config;
-            Listservers.ItemsSource = Plugin.Config.WormholeGates;
         }
 
         private Plugin Plugin { get; }
+        private GateViewModel _selectedGate = new ();
 
         private void SaveButton_OnClick(object sender, RoutedEventArgs e)
         {
@@ -39,47 +38,51 @@ namespace Wormhole
                 return;
             }
 
-            var newServer = new WormholeGate
-            {
-                Name = Nameinput.Text,
-                Description = Descriptioninput.Text,
-                HexColor = HexColorinput.Text,
-                SendTo = SendToinput.Text,
-                X = xCord,
-                Y = yCord,
-                Z = zCord
-            };
+            _selectedGate.Name = Nameinput.Text;
+            _selectedGate.Description = Descriptioninput.Text;
+            _selectedGate.HexColor = HexColorinput.Text;
+            _selectedGate.X = xCord;
+            _selectedGate.Y = yCord;
+            _selectedGate.Z = zCord;
 
-            if (Plugin.Config.WormholeGates.Contains(newServer)) return;
+            if (Plugin.Config.WormholeGates.Any(b => b.Name == _selectedGate.Name)) return;
 
-            Plugin.Config.WormholeGates.Add(newServer);
+            Plugin.Config.WormholeGates.Add(_selectedGate);
             Nameinput.Text = string.Empty;
             Descriptioninput.Text = string.Empty;
             HexColorinput.Text = string.Empty;
-            SendToinput.Text = string.Empty;
             Xinput.Text = string.Empty;
             Yinput.Text = string.Empty;
             Zinput.Text = string.Empty;
+            SendToHinput.Text = string.Empty;
+            _selectedGate = new ();
         }
 
         private void Del_OnClick(object sender, RoutedEventArgs e)
         {
-            if (Listservers.SelectedItem is WormholeGate gate)
+            if (ListServers.SelectedItem is GateViewModel gate)
                 Plugin.Config.WormholeGates.Remove(gate);
         }
 
         private void Edit_OnClick(object sender, RoutedEventArgs e)
         {
-            if (Listservers.SelectedItem is not WormholeGate gate) return;
+            if (ListServers.SelectedItem is not GateViewModel gate) return;
 
             Nameinput.Text = gate.Name;
             Descriptioninput.Text = gate.Description;
             HexColorinput.Text = gate.HexColor;
-            SendToinput.Text = gate.SendTo;
             Xinput.Text = gate.X.ToString(CultureInfo.InvariantCulture);
             Yinput.Text = gate.Y.ToString(CultureInfo.InvariantCulture);
             Zinput.Text = gate.Z.ToString(CultureInfo.InvariantCulture);
+            SendToHinput.Text = string.Join(";", gate.Destinations.Select(static b => b.Id));
             Plugin.Config.WormholeGates.Remove(gate);
+            _selectedGate = gate;
+        }
+
+        private void DestinationsButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_selectedGate is { } gate)
+                new DestinationsEditor(gate).ShowDialog();
         }
     }
 }

@@ -18,14 +18,17 @@ namespace Wormhole.Mod
         private static readonly MySoundPair ChargeSound = new MySoundPair("WormholeJumpCharge");
         private static readonly MySoundPair JumpSound = new MySoundPair("WormholeJumpPerform");
         private static readonly MySoundPair AfterSound = new MySoundPair("WormholeJumpAfter");
+
+        public static JumpComponent Instance;
         
-        private readonly Dictionary<uint, GateDataMessage> _gates = new Dictionary<uint, GateDataMessage>();
+        public readonly Dictionary<uint, GateDataMessage> Gates = new Dictionary<uint, GateDataMessage>();
         private readonly MyEntity3DSoundEmitter _soundEmitter = new MyEntity3DSoundEmitter(null);
         
         private GateVisuals _gateVisuals => GateVisuals.Instance;
 
         public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
         {
+            Instance = this;
             if (MyAPIGateway.Multiplayer.IsServer) return;
             base.Init(sessionComponent);
             RegisterHandlers();
@@ -42,7 +45,7 @@ namespace Wormhole.Mod
 
         private const ushort JumpStatusNetId = 3456;
         private const ushort GateDataNetId = 3457;
-        
+
         private void RegisterHandlers()
         {
             MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(JumpStatusNetId, JumpStatusHandler);
@@ -61,7 +64,7 @@ namespace Wormhole.Mod
             IMyCubeGrid grid;
             GateDataMessage gate;
             if (message == null || !fromServer || !MyAPIGateway.Entities.TryGetEntityById(message.GridId, out entity) ||
-                (grid = entity as IMyCubeGrid) == null || !_gates.TryGetValue(message.GateId, out gate))
+                (grid = entity as IMyCubeGrid) == null || !Gates.TryGetValue(message.GateId, out gate))
                 return;
             MyLog.Default?.WriteLine($"Jump status update {message.Status}");
             switch (message.Status)
@@ -136,10 +139,10 @@ namespace Wormhole.Mod
 
         private void OnGatesData(IEnumerable<GateDataMessage> gates)
         {
-            _gates.Clear();
+            Gates.Clear();
             foreach (var gate in gates)
             {
-                _gates[gate.Id] = gate;
+                Gates[gate.Id] = gate;
                 _gateVisuals.CreateEffectForGate(gate);
             }
         }

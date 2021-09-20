@@ -126,6 +126,7 @@
       <Compile Include="GatesMessage.cs" />
       <Compile Include="GateVisuals.cs" />
       <Compile Include="JumpComponent.cs" />
+      <Compile Include="JumpDriveLogic.cs" />
       <Compile Include="JumpStatus.cs" />
       <Compile Include="JumpStatusMessage.cs" />
     </ItemGroup>

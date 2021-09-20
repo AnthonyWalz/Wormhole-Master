@@ -1,0 +1,49 @@
+﻿<Window x:Class="Wormhole.Views.DestinationsEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:viewModels="clr-namespace:Wormhole.ViewModels"
+        xmlns:torch="clr-namespace:Torch.Views;assembly=Torch"
+        xmlns:converters="clr-namespace:Wormhole.Views.Converters"
+        mc:Ignorable="d"
+        Title="DestinationsEditor" Height="450" Width="800">
+    <Window.DataContext>
+        <viewModels:GateViewModel />
+    </Window.DataContext>
+    <Window.Resources>
+        <converters:DestinationConverter x:Key="DestinationConverter" />
+        <converters:EnumItemsSource x:Key="EnumItemsSource" />
+        <viewModels:DestinationType x:Key="DestinationType" />
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+        <Grid Margin="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100*"/>
+                <RowDefinition Height="18*"/>
+            </Grid.RowDefinitions>
+            <DataGrid AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding Path=Destinations}" x:Name="ElementsDataGrid">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name" Width="1*" Binding="{Binding Path=DisplayName}" />
+                    <DataGridTextColumn Header="Type" Width="1*" Binding="{Binding Converter={StaticResource DestinationConverter}}" />
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Margin="3" Grid.Row="1" x:Name="ButtonsPanel">
+                <Button Margin="3" Content="Add" Click="ButtonAdd_OnClick" />
+                <Button Margin="3" Content="Delete" Click="ButtonDelete_OnClick" />
+            </StackPanel>
+            <StackPanel Margin="3" Grid.Row="1" Visibility="Hidden" x:Name="AddConfirmationPanel">
+                <ComboBox Margin="3" x:Name="TypeComboBox"
+                          ItemsSource="{Binding Source={StaticResource DestinationType}, Converter={StaticResource EnumItemsSource}, Mode=OneTime}"
+                          DisplayMemberPath="Description" />
+                <Button Margin="3" Content="Confirm" Click="ButtonConfirm_OnClick" />
+            </StackPanel>
+        </Grid>
+        <torch:PropertyGrid DataContext="{Binding Source={x:Reference ElementsDataGrid}, Path=SelectedItem}"
+                            Grid.Column="1" Margin="3" />
+    </Grid>
+</Window>

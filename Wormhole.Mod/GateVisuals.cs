@@ -43,13 +43,8 @@ namespace Wormhole.Mod
             initialMatrix.Translation += initialMatrix.Right * size;
             var wmPos = initialMatrix.Translation;
 
-            MyParticleEffect effect;
-            MyParticlesManager.TryCreateParticleEffect(effectName, ref initialMatrix, ref wmPos, uint.MaxValue,
-                out effect);
-            if (effect == null) return false;
-
             var rotatingParticle =
-                new RotatingParticle(effect, 0, initialMatrix, centerMatrix, size);
+                new RotatingParticle(0, initialMatrix, centerMatrix, size, gate.ParticleId);
 
             _allEffects[gate.Id] = rotatingParticle;
             if (enable)
@@ -57,8 +52,6 @@ namespace Wormhole.Mod
                 _enabledEffects[gate.Id] = rotatingParticle;
                 return true;
             }
-            
-            effect.Pause();
             return true;
         }
 
@@ -68,7 +61,7 @@ namespace Wormhole.Mod
             if (!_allEffects.TryGetValue(gateId, out effect))
                 return;
             _enabledEffects[gateId] = effect;
-            effect.Effect.Play();
+            effect.Play();
         }
         
         public void DisableEffectForGate(uint gateId)
@@ -77,7 +70,7 @@ namespace Wormhole.Mod
             if (!_enabledEffects.TryGetValue(gateId, out effect))
                 return;
             _enabledEffects.Remove(gateId);
-            effect.Effect.Pause();
+            effect.Stop();
         }
 
         private void RemoveAllEffect()
@@ -85,7 +78,7 @@ namespace Wormhole.Mod
             foreach (var effect in _allEffects)
             {
                 var rotatingParticle = effect.Value;
-                rotatingParticle.Effect.Stop();
+                rotatingParticle.Stop();
             }
 
             _allEffects.Clear();
@@ -99,6 +92,12 @@ namespace Wormhole.Mod
             foreach (var effect in _enabledEffects)
             {
                 var rotatingParticle = effect.Value;
+
+                if (rotatingParticle.Effect == null)
+                {
+                    rotatingParticle.Play();
+                    continue;
+                }
                 
                 var angle = Vector3D.Rotate(
                     rotatingParticle.InitialMatrix.Translation - rotatingParticle.CenterMatrix.Translation,
@@ -112,7 +111,7 @@ namespace Wormhole.Mod
 
                 rotatingParticle.Effect.WorldMatrix =
                     MatrixD.CreateWorld(finalPos, finalUp, rotatingParticle.Effect.WorldMatrix.Up); //Final matrix
-                rotatingParticle.CurrentAngle += 5f; //Increase the angle every tick
+                rotatingParticle.CurrentAngle += 0.5f; //Increase the angle every tick
 
                 //MyVisualScriptLogicProvider.CreateLightning(final_pos);
             }
@@ -132,14 +131,28 @@ namespace Wormhole.Mod
             public MatrixD InitialMatrix; //Initial position
             public float Radius;
 
-            public RotatingParticle(MyParticleEffect effect, float currentAngle, MatrixD initialMatrix,
-                MatrixD centerMatrix, float radius)
+            private readonly string _effectName;
+
+            public RotatingParticle(float currentAngle, MatrixD initialMatrix,
+                MatrixD centerMatrix, float radius, string effectName)
             {
-                Effect = effect;
                 CurrentAngle = currentAngle;
                 InitialMatrix = initialMatrix;
                 CenterMatrix = centerMatrix;
                 Radius = radius;
+                _effectName = effectName;
+            }
+
+            public void Play()
+            {
+                var pos = InitialMatrix.Translation;
+                MyParticlesManager.TryCreateParticleEffect(_effectName, ref InitialMatrix, ref pos, uint.MaxValue, out Effect);
+            }
+
+            public void Stop()
+            {
+                Effect?.Stop();
+                Effect = null;
             }
         }
     }

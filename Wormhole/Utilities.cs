@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox;
@@ -10,6 +13,9 @@ using Sandbox.Common.ObjectBuilders;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
+using Torch.Mod;
+using Torch.Mod.Messages;
+using Torch.Utils;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -29,7 +35,7 @@ namespace Wormhole
             var biggestGrid = grids.OrderByDescending(static b => b.CubeBlocks.Count).First();
             newPosition -= FindGridsBoundingSphere(grids, biggestGrid).Center -
                            biggestGrid.PositionAndOrientation!.Value.Position;
-            var delta = newPosition - biggestGrid.PositionAndOrientation!.Value.Position;
+            var delta = biggestGrid.PositionAndOrientation!.Value.Position;
 
             return grids.All(grid =>
             {
@@ -40,7 +46,14 @@ namespace Wormhole
                 }
 
                 var gridPositionOrientation = grid.PositionAndOrientation.Value;
-                gridPositionOrientation.Position = newPosition + delta;
+                if (grid == biggestGrid)
+                {
+                    gridPositionOrientation.Position = newPosition;
+                }
+                else
+                {
+                    gridPositionOrientation.Position = newPosition + gridPositionOrientation.Position - delta;
+                }
                 grid.PositionAndOrientation = gridPositionOrientation;
 
                 // reset velocity
@@ -199,6 +212,45 @@ namespace Wormhole
                 b.Component is MyObjectBuilder_HierarchyComponentBase);
 
             ((MyObjectBuilder_HierarchyComponentBase) component?.Component)?.Children.Clear();
+        }
+
+        public static bool TryParseGps(string raw, out string name, out Vector3D position, out Color color)
+        {
+            name = default;
+            position = default;
+            color = default;
+            
+            var parts = raw.Split(':');
+            if (parts.Length != 7)
+                return false;
+            name = parts[1];
+            if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var xCord) ||
+                !double.TryParse(parts[3], NumberStyles.Float, CultureInfo.InvariantCulture, out var yCord) ||
+                !double.TryParse(parts[4], NumberStyles.Float, CultureInfo.InvariantCulture, out var zCord))
+                return false;
+            position = new (xCord, yCord, zCord);
+            color = ColorUtils.TranslateColor(parts[5]);
+            return true;
+        }
+
+        public static void SendConnectToServer(string address, ulong clientId)
+        {
+            ModCommunication.SendMessageTo(
+                new JoinServerMessage(ToIpEndpoint(address, MySandboxGame.ConfigDedicated.ServerPort).ToString()),
+                clientId);
+        }
+        
+        private static IPEndPoint ToIpEndpoint(string hostNameOrAddress, int defaultPort)
+        {
+            var parts = hostNameOrAddress.Split(':');
+            
+            if (parts.Length == 2)
+                defaultPort = int.Parse(parts[1]);
+            
+            var addrs = Dns.GetHostAddresses(parts[0]);
+            return new (addrs.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork)
+                        ??
+                        addrs.First(), defaultPort);
         }
 
         // parsing helper

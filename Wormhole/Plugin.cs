@@ -29,6 +29,8 @@ using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
 using Wormhole.Managers;
+using Wormhole.ViewModels;
+using Wormhole.Views;
 
 namespace Wormhole
 {
@@ -77,13 +79,14 @@ namespace Wormhole
             Instance = this;
             SetupConfig();
 
-            if (Config.GateVisuals)
-            {
-                _clientEffectsManager = new (Torch);
-                _jumpManager = new (Torch);
-                Torch.Managers.AddManager(_clientEffectsManager);
-                Torch.Managers.AddManager(_jumpManager);
-            }
+            _clientEffectsManager = new (Torch);
+            Torch.Managers.AddManager(_clientEffectsManager);
+            _jumpManager = new (Torch);
+            Torch.Managers.AddManager(_jumpManager);
+            _destinationManager = new (Torch);
+            Torch.Managers.AddManager(_destinationManager);
+            _discoveryManager = new (Torch);
+            Torch.Managers.AddManager(_discoveryManager);
 
             Torch.GameStateChanged += (_, state) =>
             {
@@ -118,7 +121,7 @@ namespace Wormhole
                 foreach (var wormhole in Config.WormholeGates)
                 {
                     var gate = new BoundingSphereD(wormhole.Position, Config.GateRadius);
-                    WormholeTransferOut(wormhole.SendTo, wormhole, gate);
+                    WormholeTransferOut(wormhole, gate);
                     WormholeTransferIn(wormhole.Name.Trim(), wormhole.Position, gate);
                 }
             }
@@ -131,8 +134,7 @@ namespace Wormhole
         public void Save()
         {
             _config.Save();
-            if (Config.GateVisuals)
-                _clientEffectsManager?.RecalculateVisualData();
+            _clientEffectsManager.RecalculateVisualData();
         }
 
         private void SetupConfig()
@@ -149,7 +151,7 @@ namespace Wormhole
         }
 
 
-        public void WormholeTransferOut(string sendTo, WormholeGate wormholeGate, BoundingSphereD gate)
+        public void WormholeTransferOut(GateViewModel gateViewModel, BoundingSphereD gate)
         {
             foreach (var grid in MyEntities.GetTopMostEntitiesInSphere(ref gate).OfType<MyCubeGrid>())
             {
@@ -157,49 +159,26 @@ namespace Wormhole
                 if (gts == null)
                     continue;
 
-                var jumpDrives = gts.Blocks.OfType<MyJumpDrive>().ToList();
+                var jumpDrives = gts.Blocks.OfType<MyJumpDrive>().Where(_destinationManager.IsValidJd).ToList();
 
                 foreach (var jumpDrive in jumpDrives)
-                    WormholeTransferOutFile(sendTo, grid, jumpDrive, wormholeGate, jumpDrives);
+                    WormholeTransferOutFile(grid, jumpDrive, gateViewModel, jumpDrives);
             }
         }
 
-        private void WormholeTransferOutFile(string sendTo, MyCubeGrid grid, MyJumpDrive wormholeDrive,
-            WormholeGate gate, IEnumerable<MyJumpDrive> wormholeDrives)
+        private void WormholeTransferOutFile(MyCubeGrid grid, MyJumpDrive wormholeDrive,
+            GateViewModel gateViewModel, IEnumerable<MyJumpDrive> wormholeDrives)
         {
-            var gatePoint = gate.Position;
-            if (Config.JumpDriveSubId.Split(',').All(s => s.Trim() != wormholeDrive.BlockDefinition.Id.SubtypeName) &&
-                !Config.WorkWithAllJd)
-                return;
+            var gatePoint = gateViewModel.Position;
+            DestinationViewModel pickedDestination;
 
-            var reply = new Request
-            {
-                PluginRequest = false,
-                Destination = null,
-                Destinations = sendTo.Split(',').Select(s => s.Trim()).ToArray()
-            };
+            if (Config.AutoSend && gateViewModel.Destinations.Count == 1)
+                pickedDestination = gateViewModel.Destinations[0];
+            else
+                pickedDestination = _destinationManager.TryGetDestination(wormholeDrive, gateViewModel);
 
-            string pickedDestination = default;
-            if (!string.IsNullOrEmpty(wormholeDrive.CustomData))
-            {
-                var request = (Request) _requestSerializer.Deserialize(new StringReader(wormholeDrive.CustomData));
-                if (request is {PluginRequest: true, Destination: { }})
-                {
-                    if (sendTo.Split(',').Any(s => s.Trim() == request.Destination.Trim()))
-                        pickedDestination = request.Destination.Trim();
-                }
-            }
-
-            using (var writer = new StringWriter())
-            {
-                _requestSerializer.Serialize(writer, reply);
-                wormholeDrive.CustomData = writer.ToString();
-            }
-
-            if (Config.AutoSend && sendTo.Split(',').Length == 1)
-                pickedDestination = sendTo.Split(',')[0].Trim();
-
-            if (pickedDestination == null)
+            // TODO internal gps jumps
+            if (pickedDestination is null or InternalDestinationViewModel)
                 return;
 
             var playerInCharge = Sync.Players.GetControllingPlayer(grid);
@@ -211,9 +190,7 @@ namespace Wormhole
 
             wormholeDrive.CurrentStoredPower = 0;
             foreach (var disablingWormholeDrive in wormholeDrives)
-                if (Config.JumpDriveSubId.Split(',')
-                        .Any(s => s.Trim() == disablingWormholeDrive.BlockDefinition.Id.SubtypeName) ||
-                    Config.WorkWithAllJd)
+                if (_destinationManager.IsValidJd(disablingWormholeDrive))
                     disablingWormholeDrive.Enabled = false;
 
             var grids = Utilities.FindGridList(grid, Config.IncludeConnectedGrids);
@@ -222,17 +199,17 @@ namespace Wormhole
                 return;
 
             // mhm let's how dirty we can switch threads
-            (Config.GateVisuals
-                ? _jumpManager.StartJump(gate, playerInCharge, wormholeDrive.CubeGrid)
-                : Task.CompletedTask).ContinueWith(_ => Torch.InvokeAsync(
+            _jumpManager.StartJump(gateViewModel, playerInCharge, wormholeDrive.CubeGrid).ContinueWith(_ => Torch.InvokeAsync(
                 () =>
                 {
-                    var destName = pickedDestination.Split(':')[0];
-                    if (Config.WormholeGates.FirstOrDefault(s => s.Name.Trim() == destName) is { } internalWormhole)
+                    var dest = (GateDestinationViewModel) pickedDestination;
+                    var destGate = _discoveryManager.GetGateByName(dest.Name, out var ownerIp);
+                    
+                    if (_discoveryManager.IsLocalGate(dest.Name))
                     {
                         var box = grids.Select(static b => b.PositionComp.WorldAABB)
                             .Aggregate(static(a, b) => a.Include(b));
-                        var toGatePoint = internalWormhole.Position;
+                        var toGatePoint = destGate.Position;
                         var toGate = new BoundingSphereD(toGatePoint, Config.GateRadius);
 
                         var freePos = Utilities.FindFreePos(toGate,
@@ -241,7 +218,7 @@ namespace Wormhole
                         if (freePos is null)
                             return;
 
-                        _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Perform, gate, grid, freePos);
+                        _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Perform, gateViewModel, grid, freePos);
 
                         MyVisualScriptLogicProvider.CreateLightning(gatePoint);
                         Utilities.UpdateGridPositionAndStopLive(wormholeDrive.CubeGrid, freePos.Value);
@@ -249,14 +226,10 @@ namespace Wormhole
                     }
                     else
                     {
-                        var destination = pickedDestination.Split(':');
-
-                        if (3 != destination.Length)
-                            throw new ArgumentException("failed parsing destination '" + destination + "'");
 
                         var transferFileInfo = new Utilities.TransferFileInfo
                         {
-                            DestinationWormhole = destination[0],
+                            DestinationWormhole = dest.Name,
                             SteamUserId = playerInCharge.Id.SteamId,
                             PlayerName = playerInCharge.DisplayName,
                             GridName = grid.DisplayName
@@ -265,7 +238,7 @@ namespace Wormhole
                         Log.Info("creating filetransfer:" + transferFileInfo.CreateLogString());
                         var filename = transferFileInfo.CreateFileName();
 
-                        _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Perform, gate, grid);
+                        _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Perform, gateViewModel, grid);
 
                         MyVisualScriptLogicProvider.CreateLightning(gatePoint);
 
@@ -301,8 +274,7 @@ namespace Wormhole
 
                             var playerSteamId = Sync.Players.TryGetSteamId(cockpit.Pilot.OwningPlayerIdentityId.Value);
                             sittingPlayerIdentityIds.Add(cockpit.Pilot.OwningPlayerIdentityId.Value);
-                            ModCommunication.SendMessageTo(new JoinServerMessage(destination[1] + ":" + destination[2]),
-                                playerSteamId);
+                            Utilities.SendConnectToServer(ownerIp, playerSteamId);
                         }
 
                         using (var stream =
@@ -334,7 +306,7 @@ namespace Wormhole
                         if (_saveOnExitTask is null || _saveOnExitTask.IsCompleted)
                             _saveOnExitTask = Torch.Save();
                     }
-                })).ContinueWith(_ => _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Succeeded, gate, grid));
+                })).ContinueWith(_ => _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Succeeded, gateViewModel, grid));
         }
 
         public void WormholeTransferIn(string wormholeName, Vector3D gatePoint, BoundingSphereD gate)
@@ -510,6 +482,8 @@ namespace Wormhole
             new (static() => CloseRespawnScreenMethod.CreateDelegate<Action>());
 
         private JumpManager _jumpManager;
+        private DestinationManager _destinationManager;
+        private WormholeDiscoveryManager _discoveryManager;
 
         private static void OnGridSpawned(MyEntity entity, IDictionary<long, MyObjectBuilder_Character> savedCharacters)
         {
