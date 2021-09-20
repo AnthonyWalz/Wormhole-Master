@@ -221,7 +221,7 @@ namespace Wormhole
                         (await Task.WhenAll(jumpTask, _serverQueryManager.IsServerFull(address))).Aggregate(
                             static(a, b) => a && b);
                     
-                    if (!result)
+                    if (result)
                     {
                         MyVisualScriptLogicProvider.SendChatMessage("Destination server is FULL!", "Wormhole",
                             playerInCharge.Identity.IdentityId, MyFontEnum.Red);
