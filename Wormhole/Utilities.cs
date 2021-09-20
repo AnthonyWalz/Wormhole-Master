@@ -21,6 +21,7 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.Components;
 using VRage.Groups;
+using VRage.Library.Utils;
 using VRage.ModAPI;
 using VRageMath;
 
@@ -251,6 +252,36 @@ namespace Wormhole
             return new (addrs.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork)
                         ??
                         addrs.First(), defaultPort);
+        }
+
+        public static Vector3D PickRandomPointInSpheres(Vector3D center, float innerRadius, float outerRadius)
+        {
+            return center;
+            var innerSphere = new BoundingSphereD(center, innerRadius);
+            var outerSphere = new BoundingSphereD(center, outerRadius);
+
+            for (var i = 0; i < 15; i++)
+            {
+                var pointInner = GetRandomPoint(innerSphere);
+                var pointOuter = GetRandomPoint(outerSphere);
+            
+                var n = MyRandom.Instance.NextDouble();
+
+                // idk how compute random point between 2 spheres, fucking math
+                // TODO add math
+            }
+        }
+        
+        private static Vector3D GetRandomPoint(BoundingSphereD sphere)
+        {
+            var u = MyRandom.Instance.NextDouble();
+            var v = MyRandom.Instance.NextDouble();
+            var theta = 2 * Math.PI * u;
+            var phi = Math.Acos(2 * v - 1);
+            var x = sphere.Center.X + sphere.Radius * Math.Sin(phi) * Math.Cos(theta);
+            var y = sphere.Center.Y + sphere.Radius * Math.Sin(phi) * Math.Sin(theta);
+            var z = sphere.Center.Z + sphere.Radius * Math.Cos(phi);
+            return new(x, y, z);
         }
 
         // parsing helper
