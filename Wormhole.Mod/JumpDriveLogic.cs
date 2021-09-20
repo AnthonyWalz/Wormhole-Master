@@ -20,6 +20,10 @@ namespace Wormhole.Mod
         public override void UpdateOnceBeforeFrame()
         {
             base.UpdateOnceBeforeFrame();
+
+            if (Entity.Storage?.ContainsKey(ComponentGuid) ?? false)
+                Entity.Storage.Remove(ComponentGuid);
+            
             if (_controlsCreated) return;
             _controlsCreated = true;
             

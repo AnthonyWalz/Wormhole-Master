@@ -69,6 +69,7 @@ namespace Wormhole
         private JumpManager _jumpManager;
         private DestinationManager _destinationManager;
         private WormholeDiscoveryManager _discoveryManager;
+        private ServerQueryManager _serverQueryManager;
 
         public static Plugin Instance { get; private set; }
         public Config Config => _config?.Data;
@@ -89,6 +90,8 @@ namespace Wormhole
             Torch.Managers.AddManager(_destinationManager);
             _discoveryManager = new (Torch);
             Torch.Managers.AddManager(_discoveryManager);
+            _serverQueryManager = new (Torch);
+            Torch.Managers.AddManager(_serverQueryManager);
 
             Torch.GameStateChanged += (_, state) =>
             {
@@ -196,8 +199,7 @@ namespace Wormhole
                 !wormholeDrive.CanJumpAndHasAccess(playerInCharge.Identity.IdentityId) ||
                 !Utilities.HasRightToMove(playerInCharge, grid))
                 return;
-
-            wormholeDrive.CurrentStoredPower = 0;
+            
             foreach (var disablingWormholeDrive in wormholeDrives)
                 if (_destinationManager.IsValidJd(disablingWormholeDrive))
                     disablingWormholeDrive.Enabled = false;
@@ -207,15 +209,42 @@ namespace Wormhole
             if (grids.Count == 0)
                 return;
 
-            // mhm let's how dirty we can switch threads
-            _jumpManager.StartJump(gateViewModel, playerInCharge, wormholeDrive.CubeGrid).ContinueWith(_ => Torch.InvokeAsync(
-                () =>
+            Task.Run(async () =>
+            {
+                var jumpTask = _jumpManager.StartJump(gateViewModel, playerInCharge, wormholeDrive.CubeGrid);
+
+                if (pickedDestination is GateDestinationViewModel destination &&
+                    !_discoveryManager.IsLocalGate(destination.Name) &&
+                    _discoveryManager.GetGateByName(destination.Name, out var address) is { })
                 {
+                    var result =
+                        (await Task.WhenAll(jumpTask, _serverQueryManager.IsServerFull(address))).Aggregate(
+                            static(a, b) => a && b);
+                    
+                    if (!result)
+                    {
+                        MyVisualScriptLogicProvider.SendChatMessage("Destination server is FULL!", "Wormhole",
+                            playerInCharge.Identity.IdentityId, MyFontEnum.Red);
+                        
+                        MyVisualScriptLogicProvider.ShowNotification("Destination server is FULL!", 15000,
+                            MyFontEnum.Red, playerInCharge.Identity.IdentityId);
+                        return;
+                    }
+                }
+
+                await Torch.InvokeAsync(() =>
+                {
+                    // This is here because it can be thread unsafe, so just call it in game thread
+                    wormholeDrive.CurrentStoredPower = 0;
+                    
                     if (pickedDestination is GateDestinationViewModel gateDestination)
                         ProcessGateJump(gateDestination, grid, grids, wormholeDrive, gateViewModel, playerInCharge);
                     else if (pickedDestination is InternalDestinationViewModel internalDestination)
-                        ProcessInternalGpsJump(internalDestination, grid, grids, wormholeDrive, gateViewModel, playerInCharge);
-                })).ContinueWith(_ => _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Succeeded, gateViewModel, grid));
+                        ProcessInternalGpsJump(internalDestination, grid, grids, wormholeDrive, gateViewModel,
+                            playerInCharge);
+                });
+                _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Succeeded, gateViewModel, grid);
+            });
         }
 
         #endregion

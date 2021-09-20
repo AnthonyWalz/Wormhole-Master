@@ -241,7 +241,7 @@ namespace Wormhole
                 clientId);
         }
         
-        private static IPEndPoint ToIpEndpoint(string hostNameOrAddress, int defaultPort)
+        public static IPEndPoint ToIpEndpoint(string hostNameOrAddress, int defaultPort)
         {
             var parts = hostNameOrAddress.Split(':');
             

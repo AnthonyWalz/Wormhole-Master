@@ -85,11 +85,14 @@
       <HintPath>$(SolutionDir)GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="SteamQueryNet, Version=1.0.0.5, Culture=neutral, PublicKeyToken=null">
+      <HintPath>$(SolutionDir)lib\SteamQueryNet\SteamQueryNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
-      <HintPath>..\GameBinaries\System.Memory.dll</HintPath>
+      <HintPath>$(SolutionDir)GameBinaries\System.Memory.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Web.Extensions" />
@@ -165,6 +168,7 @@
     <Compile Include="Managers\JumpManager.cs" />
     <Compile Include="Managers\JumpStatus.cs" />
     <Compile Include="Managers\JumpStatusMessage.cs" />
+    <Compile Include="Managers\ServerQueryManager.cs" />
     <Compile Include="Managers\WormholeDiscoveryManager.cs" />
     <Compile Include="Request.cs" />
     <Compile Include="TransferFile.cs" />
