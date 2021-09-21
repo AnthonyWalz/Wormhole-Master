@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
+using Sandbox;
 using Torch.API;
 using Torch.Managers;
 using VRage.Security;
@@ -29,6 +30,8 @@ namespace Wormhole.Managers
         };
 
         public readonly ConcurrentDictionary<string, WormholeDiscovery> Discoveries = new ();
+
+        private string _directoryPath = null!;
         
         public WormholeDiscoveryManager(ITorchBase torchInstance) : base(torchInstance)
         {
@@ -59,16 +62,23 @@ namespace Wormhole.Managers
         public override void Attach()
         {
             base.Attach();
-            var path = Path.Combine(Plugin.Instance.Config.Folder, "admingates_discovery");
-            foreach (var file in Directory.CreateDirectory(path).GetFiles("*.xml"))
+            Torch.GameStateChanged += TorchOnGameStateChanged;
+        }
+
+        private void TorchOnGameStateChanged(MySandboxGame game, TorchGameState newState)
+        {
+            if (newState != TorchGameState.Loaded) return;
+            
+            _directoryPath = Path.Combine(Plugin.Instance.Config.Folder, "admingates_discovery");
+            foreach (var file in Directory.CreateDirectory(_directoryPath).GetFiles("*.xml"))
             {
                 ProcessItem(file.Name, file.FullName);
             }
 
-            _watcher.Path = path;
+            _watcher.Path = _directoryPath;
             _watcher.Renamed += WatcherOnRenamed;
             _watcher.EnableRaisingEvents = true;
-            EnsureLatestDiscovery(path);
+            EnsureLatestDiscovery();
         }
 
         public override void Detach()
@@ -77,10 +87,11 @@ namespace Wormhole.Managers
             _watcher.EnableRaisingEvents = false;
         }
 
-        private void EnsureLatestDiscovery(string directoryPath)
+        public void EnsureLatestDiscovery()
         {
+            
             var thisIp = Plugin.Instance.Config.ThisIp.Replace(':', ';');
-            var file = Directory.EnumerateFiles(directoryPath, $"{thisIp}_*.xml").FirstOrDefault();
+            var file = Directory.EnumerateFiles(_directoryPath, $"{thisIp}_*.xml").FirstOrDefault();
             
             using var stream = new MemoryStream();
             DiscoverySerializer.Serialize(stream, new WormholeDiscovery
@@ -97,12 +108,12 @@ namespace Wormhole.Managers
             if (file != null)
                 File.Delete(file);
 
-            file = Path.Combine(directoryPath, $"{thisIp}_{hash}");
+            file = Path.Combine(_directoryPath, $"{thisIp}_{hash}");
             
             using (var fileStream = File.Create(file))
                 fileStream.Write(buffer, 0, buffer.Length);
             
-            rename(file, Path.Combine(directoryPath, $"{thisIp}_{hash}.xml"));
+            rename(file, Path.Combine(_directoryPath, $"{thisIp}_{hash}.xml"));
         }
         
         private void ProcessItem(string fileName, string path)

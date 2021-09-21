@@ -146,6 +146,7 @@ namespace Wormhole
         {
             _config.Save();
             _clientEffectsManager.RecalculateVisualData();
+            _discoveryManager.EnsureLatestDiscovery();
         }
 
         private void SetupConfig()

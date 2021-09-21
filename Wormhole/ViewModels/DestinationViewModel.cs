@@ -11,10 +11,10 @@ namespace Wormhole.ViewModels
     [XmlInclude(typeof(GateDestinationViewModel))]
     public class DestinationViewModel : ViewModel
     {
-        [Display(Name = "Display Name")]
+        [Display(Name = "Display Name", Description = "Display Name (for players & you) can be what ever you want")]
         public string DisplayName { get; set; } = "unnamed";
 
-        [Display(Name = "Id", Description = "Must be unique for all destinations in current gate")]
+        [Display(Name = "Id", Description = "Must be unique for all destinations in current gate (you can just put random string)")]
         public string Id { get; set; }
         
         public static DestinationViewModel Create(DestinationType type)
@@ -49,7 +49,7 @@ namespace Wormhole.ViewModels
     [Destination(DestinationType.Gate)]
     public class GateDestinationViewModel : DestinationViewModel
     {
-        [Display(Name = "Destination Gate Name", Description = "Destination gate name. Local or Remote gate works.")]
+        [Display(Name = "Destination Gate Name", Description = "Destination gate name. Local or Remote gate works. (Just Gate Name, ip/port are not needed)")]
         public string Name { get; set; }
     }
 
