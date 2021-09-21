@@ -118,8 +118,8 @@ namespace Wormhole.Managers
         
         private void ProcessItem(string fileName, string path)
         {
-            using var reader = File.OpenText(path);
-            Discoveries[fileName.Split('_')[0].Replace(';', ':')] = (WormholeDiscovery) DiscoverySerializer.Deserialize(reader);
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            Discoveries[fileName.Split('_')[0].Replace(';', ':')] = (WormholeDiscovery) DiscoverySerializer.Deserialize(stream);
         }
 
         private void WatcherOnRenamed(object sender, RenamedEventArgs e)
