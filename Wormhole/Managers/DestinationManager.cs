@@ -68,7 +68,13 @@ namespace Wormhole.Managers
         private static bool TryGetDestinationFromStorage(MyModStorageComponentBase component, out string destination)
         {
             destination = null;
-            return component?.TryGetValue(ComponentGuid, out destination) ?? false;
+            
+            if (!(component?.TryGetValue(ComponentGuid, out destination) ?? false)) 
+                return false;
+            
+            component.Remove(ComponentGuid);
+            return true;
+
         }
 
         // ReSharper disable once SuggestBaseTypeForParameter
@@ -102,6 +108,8 @@ namespace Wormhole.Managers
             {
                 return false;
             }
+            
+            block.CustomData = string.Empty;
             return true;
         }
     }
