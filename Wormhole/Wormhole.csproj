@@ -218,6 +218,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="ZipAndCopy" AfterTargets="Build">
-    <ZipDirectory DestinationFile="$(SolutionDir)zip\Wormhole.zip" Overwrite="true" SourceDirectory="$(TargetDir)" />
+    <ZipDirectory DestinationFile="$(SolutionDir)Build\Wormhole-v2.0.x.x.zip" Overwrite="true" SourceDirectory="$(TargetDir)" />
   </Target>
 </Project>

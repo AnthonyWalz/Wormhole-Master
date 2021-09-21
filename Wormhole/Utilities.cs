@@ -257,6 +257,8 @@ namespace Wormhole
         public static Vector3D PickRandomPointInSpheres(Vector3D center, float innerRadius, float outerRadius)
         {
             return center;
+
+            /* disable till solution, if ever needed.
             var innerSphere = new BoundingSphereD(center, innerRadius);
             var outerSphere = new BoundingSphereD(center, outerRadius);
 
@@ -270,6 +272,7 @@ namespace Wormhole
                 // idk how compute random point between 2 spheres, fucking math
                 // TODO add math
             }
+            */
         }
         
         private static Vector3D GetRandomPoint(BoundingSphereD sphere)
