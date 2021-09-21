@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProtoBuf;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
@@ -45,7 +46,15 @@ namespace Wormhole.Mod
             listBox.SupportsMultipleBlocks = false;
             listBox.ListContent = ListContent;
             listBox.ItemSelected = ItemSelected;
+            listBox.Visible = Visible;
+            listBox.Enabled = Visible;
             MyAPIGateway.TerminalControls.AddControl<IMyJumpDrive>(listBox);
+        }
+
+        private static bool Visible(IMyTerminalBlock terminalBlock)
+        {
+            var block = (MyCubeBlock)terminalBlock;
+            return JumpComponent.Instance.JdDefinitionIds.Any(b => b == block.BlockDefinition.Id);
         }
 
         private static void ItemSelected(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> selected)

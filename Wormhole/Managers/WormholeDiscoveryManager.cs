@@ -89,6 +89,8 @@ namespace Wormhole.Managers
 
         public void EnsureLatestDiscovery()
         {
+            if (_directoryPath is null)
+                return;
             
             var thisIp = Plugin.Instance.Config.ThisIp.Replace(':', ';');
             var file = Directory.EnumerateFiles(_directoryPath, $"{thisIp}_*.xml").FirstOrDefault();

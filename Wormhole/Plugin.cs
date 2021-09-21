@@ -166,9 +166,12 @@ namespace Wormhole
 
         #region Outgoing Transferring
 
+        private readonly List<MyEntity> _tmpEntities = new ();
         public void WormholeTransferOut(GateViewModel gateViewModel, BoundingSphereD gate)
         {
-            foreach (var grid in MyEntities.GetTopMostEntitiesInSphere(ref gate).OfType<MyCubeGrid>())
+            // MyEntities.GetTopMostEntitiesInSphere(ref gate).OfType<MyCubeGrid>() 
+            MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref gate, _tmpEntities, MyEntityQueryType.Dynamic);
+            foreach (var grid in _tmpEntities.OfType<MyCubeGrid>())
             {
                 var gts = grid.GridSystems.TerminalSystem;
                 if (gts == null)
@@ -179,6 +182,7 @@ namespace Wormhole
                 foreach (var jumpDrive in jumpDrives)
                     WormholeTransferOutFile(grid, jumpDrive, gateViewModel, jumpDrives);
             }
+            _tmpEntities.Clear();
         }
 
         private void WormholeTransferOutFile(MyCubeGrid grid, MyJumpDrive wormholeDrive,
@@ -202,8 +206,7 @@ namespace Wormhole
                 return;
             
             foreach (var disablingWormholeDrive in wormholeDrives)
-                if (_destinationManager.IsValidJd(disablingWormholeDrive))
-                    disablingWormholeDrive.Enabled = false;
+                disablingWormholeDrive.Enabled = false;
 
             var grids = Utilities.FindGridList(grid, Config.IncludeConnectedGrids);
 
@@ -237,6 +240,8 @@ namespace Wormhole
                     await jumpTask;
                 }
 
+                await _jumpManager.Jump(gateViewModel, grid);
+                
                 await Torch.InvokeAsync(() =>
                 {
                     // This is here because it can be thread unsafe, so just call it in game thread

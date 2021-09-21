@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Game;
@@ -7,6 +8,7 @@ using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
+using VRage.ObjectBuilders;
 using VRage.Utils;
 using VRageMath;
 
@@ -25,6 +27,8 @@ namespace Wormhole.Mod
         private readonly MyEntity3DSoundEmitter _soundEmitter = new MyEntity3DSoundEmitter(null);
         
         private GateVisuals _gateVisuals => GateVisuals.Instance;
+
+        public readonly List<SerializableDefinitionId> JdDefinitionIds = new List<SerializableDefinitionId>();
 
         public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
         {
@@ -93,6 +97,7 @@ namespace Wormhole.Mod
                 return;
             MyLog.Default?.WriteLine($"Loaded {message.Messages} gates");
             OnGatesData(message.Messages);
+            OnJdData(message.WormholeDriveIds);
         }
         #endregion
 
@@ -145,6 +150,12 @@ namespace Wormhole.Mod
                 Gates[gate.Id] = gate;
                 _gateVisuals.CreateEffectForGate(gate);
             }
+        }
+
+        private void OnJdData(IEnumerable<SerializableDefinitionId> definitionIds)
+        {
+            JdDefinitionIds.Clear();
+            JdDefinitionIds.AddRange(definitionIds);
         }
     }
 }

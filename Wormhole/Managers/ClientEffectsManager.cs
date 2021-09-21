@@ -10,6 +10,7 @@ using Sandbox.ModAPI;
 using Torch.API;
 using Torch.Managers;
 using VRage.Game.Entity;
+using VRage.ObjectBuilders;
 using VRage.Security;
 using VRageMath;
 using Wormhole.ViewModels;
@@ -23,6 +24,8 @@ namespace Wormhole.Managers
         private const string ParticleDefaultId = "p_subspace_start";
 
         private readonly GatesMessage _message = new ();
+
+        [Dependency] private readonly DestinationManager _destinationManager = null!;
 
         public ClientEffectsManager(ITorchBase torchInstance) : base(torchInstance)
         {
@@ -106,6 +109,9 @@ namespace Wormhole.Managers
                 _message.Messages.Add(visual);
             }
 
+            _message.WormholeDriveIds.Clear();
+            _message.WormholeDriveIds.AddRange(_destinationManager.JdDefinitions.Select(b => (SerializableDefinitionId)b));
+            
             MyAPIGateway.Multiplayer.SendMessageToOthers(GateDataNetId,
                 MyAPIGateway.Utilities.SerializeToBinary(_message));
         }

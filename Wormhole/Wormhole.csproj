@@ -170,7 +170,6 @@
     <Compile Include="Managers\JumpStatusMessage.cs" />
     <Compile Include="Managers\ServerQueryManager.cs" />
     <Compile Include="Managers\WormholeDiscoveryManager.cs" />
-    <Compile Include="Request.cs" />
     <Compile Include="TransferFile.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="Commands.cs" />
