@@ -221,16 +221,20 @@ namespace Wormhole
                     var result =
                         (await Task.WhenAll(jumpTask, _serverQueryManager.IsServerFull(address))).Aggregate(
                             static(a, b) => a && b);
-                    
+
                     if (result)
                     {
                         MyVisualScriptLogicProvider.SendChatMessage("Destination server is FULL!", "Wormhole",
                             playerInCharge.Identity.IdentityId, MyFontEnum.Red);
-                        
+
                         MyVisualScriptLogicProvider.ShowNotification("Destination server is FULL!", 15000,
                             MyFontEnum.Red, playerInCharge.Identity.IdentityId);
                         return;
                     }
+                }
+                else
+                {
+                    await jumpTask;
                 }
 
                 await Torch.InvokeAsync(() =>
