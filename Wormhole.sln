@@ -7,11 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wormhole", "Wormhole\Wormho
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wormhole.Mod", "Wormhole.Mod\Wormhole.Mod.csproj", "{E154EE3A-8DF5-4DAB-A5F7-418CCC1611C3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Wormhole.HelperMOD", "Wormhole.HelperMOD", "{BD57EAEC-2E42-4589-A0DC-8A3A521B4E7E}"
-	ProjectSection(SolutionItems) = preProject
-		Wormhole.HelperMOD\Main.cs = Wormhole.HelperMOD\Main.cs
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
