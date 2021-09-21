@@ -24,10 +24,10 @@ namespace Wormhole
         public bool IncludeConnectedGrids { get; set; } = true;
 
         [Display(Name = "Keep projector blueprints")]
-        public bool ExportProjectorBlueprints { get; set; }
+        public bool ExportProjectorBlueprints { get; set; } = true;
 
         [Display(Name = "JumpDrive SubtypeId", Description = "SubtypeId of your jump drive/wormhole stabilizer")]
-        public string JumpDriveSubId { get; set; } = "WormholeDrive";
+        public string JumpDriveSubId { get; set; } = "WormholeDrive, WormholeDrive_Small";
 
         [Display(Name = "Current Server IP:Port (domains also works)")]
         public string ThisIp { get; set; } = string.Empty;
@@ -35,10 +35,10 @@ namespace Wormhole
         public double GateRadius { get; set; } = 180;
 
         [Display(Name = "Folder", Description = "Must be shared across all torches")]
-        public string Folder { get; set; }
+        public string Folder { get; set; } = "WormHole";
 
         [Display(Name = "Tick Rate", Description = "Wormhole runs once out of x ticks")]
-        public int Tick { get; set; } = 50;
+        public int Tick { get; set; } = 250;
 
         [Display(Name = "Respawn Players", Description = "Keep players in cryos/beds/cockpits")]
         public bool PlayerRespawn { get; set; } = true;
