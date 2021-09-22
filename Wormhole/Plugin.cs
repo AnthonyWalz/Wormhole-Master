@@ -577,9 +577,9 @@ namespace Wormhole
         {
             var grid = (MyCubeGrid) entity;
 
-            // prefer spawn character in cryos/beds
+            // prefer spawn character in Cockpits then cryos/beds
             foreach (var cockpit in grid.GetFatBlocks().OfType<MyCockpit>()
-                .OrderBy(static b => b is MyCryoChamber ? 0 : 1))
+                .OrderBy(static b => b is MyCryoChamber ? 1 : 0))
             {
                 if (savedCharacters.Count < 1) break;
                 if (cockpit.Pilot is { }) continue;
