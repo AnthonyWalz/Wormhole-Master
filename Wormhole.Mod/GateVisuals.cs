@@ -151,7 +151,7 @@ namespace Wormhole.Mod
 
             public void Stop()
             {
-                Effect?.Stop();
+                Effect?.StopEmitting(10);
                 Effect = null;
             }
         }
