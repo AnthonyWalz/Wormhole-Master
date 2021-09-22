@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Threading;
 using System.Xml.Serialization;
 using Sandbox;
 using Torch.API;
@@ -15,13 +15,6 @@ namespace Wormhole.Managers
 {
     public class WormholeDiscoveryManager : Manager
     {
-        [DllImport("msvcrt", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
-        public static extern int rename(
-            [MarshalAs(UnmanagedType.LPStr)]
-            string oldpath,
-            [MarshalAs(UnmanagedType.LPStr)]
-            string newpath);
-        
         private static readonly XmlSerializer DiscoverySerializer = new (typeof(WormholeDiscovery));
         
         private readonly FileSystemWatcher _watcher = new ()
@@ -115,7 +108,7 @@ namespace Wormhole.Managers
             using (var fileStream = File.Create(file))
                 fileStream.Write(buffer, 0, buffer.Length);
             
-            rename(file, Path.Combine(_directoryPath, $"{thisIp}_{hash}.xml"));
+            WinIoUtils.Rename(file, Path.Combine(_directoryPath, $"{thisIp}_{hash}.xml"));
         }
         
         private void ProcessItem(string fileName, string path)
@@ -126,6 +119,10 @@ namespace Wormhole.Managers
 
         private void WatcherOnRenamed(object sender, RenamedEventArgs e)
         {
+            while (WinIoUtils.GetLockerProcesses(e.FullPath).Count > 0)
+            {
+                Thread.Sleep(100);
+            }
             ProcessItem(e.Name, e.FullPath);
         }
     }

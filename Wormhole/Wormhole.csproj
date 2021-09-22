@@ -203,6 +203,7 @@
     <Compile Include="Views\Gui.xaml.cs">
       <DependentUpon>Gui.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WinIoUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.xml">
