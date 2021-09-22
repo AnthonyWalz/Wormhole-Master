@@ -53,6 +53,9 @@ namespace Wormhole.Mod
 
         private static bool Visible(IMyTerminalBlock terminalBlock)
         {
+            if (JumpComponent.Instance.WorkWithAllJds.GetValueOrDefault(false))
+                return true;
+            
             var block = (MyCubeBlock)terminalBlock;
             return JumpComponent.Instance.JdDefinitionIds.Any(b => b == block.BlockDefinition.Id);
         }

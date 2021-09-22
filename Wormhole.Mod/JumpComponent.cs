@@ -29,6 +29,7 @@ namespace Wormhole.Mod
         private GateVisuals _gateVisuals => GateVisuals.Instance;
 
         public readonly List<SerializableDefinitionId> JdDefinitionIds = new List<SerializableDefinitionId>();
+        public bool? WorkWithAllJds;
 
         public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
         {
@@ -97,7 +98,7 @@ namespace Wormhole.Mod
                 return;
             MyLog.Default?.WriteLine($"Loaded {message.Messages} gates");
             OnGatesData(message.Messages);
-            OnJdData(message.WormholeDriveIds);
+            OnJdData(message.WormholeDriveIds, message.WorkWithAllJds);
         }
         #endregion
 
@@ -152,10 +153,11 @@ namespace Wormhole.Mod
             }
         }
 
-        private void OnJdData(IEnumerable<SerializableDefinitionId> definitionIds)
+        private void OnJdData(IEnumerable<SerializableDefinitionId> definitionIds, bool workWithAllJds)
         {
             JdDefinitionIds.Clear();
             JdDefinitionIds.AddRange(definitionIds);
+            WorkWithAllJds = workWithAllJds;
         }
     }
 }

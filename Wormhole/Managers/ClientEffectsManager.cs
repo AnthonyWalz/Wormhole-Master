@@ -111,6 +111,7 @@ namespace Wormhole.Managers
 
             _message.WormholeDriveIds.Clear();
             _message.WormholeDriveIds.AddRange(_destinationManager.JdDefinitions.Select(b => (SerializableDefinitionId)b));
+            _message.WorkWithAllJds = Plugin.Instance.Config.WorkWithAllJd;
             
             MyAPIGateway.Multiplayer.SendMessageToOthers(GateDataNetId,
                 MyAPIGateway.Utilities.SerializeToBinary(_message));
