@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
@@ -83,26 +81,21 @@ namespace Wormhole
         /// </remarks>
         public static IReadOnlyCollection<RM_PROCESS_INFO> GetLockerProcesses(string path)
         {
-            uint handle;
             var key = Guid.NewGuid().ToString();
-
-            var res = RmStartSession(out handle, 0, key);
+            var res = RmStartSession(out uint handle, 0, key);
 
             if (res != 0)
-                throw new ("Could not begin restart session.  Unable to determine file locker.");
+                throw new("Could not begin restart session.  Unable to determine file locker.");
 
             try
             {
                 const int ERROR_MORE_DATA = 234;
-                uint pnProcInfo = 0,
-                    lpdwRebootReasons = RmRebootReasonNone;
-
+                uint pnProcInfo = 0, lpdwRebootReasons = RmRebootReasonNone;
                 var resources = new[] { path }; // Just checking on one resource.
-
                 res = RmRegisterResources(handle, (uint)resources.Length, resources, 0, null, 0, null);
 
-                if (res != 0) 
-                    throw new ("Could not register resource.");                                    
+                if (res != 0)
+                    throw new("Could not register resource.");
 
                 //Note: there's a race condition here -- the first call to RmGetList() returns
                 //      the total number of process. However, when we call RmGetList() again to get
@@ -119,14 +112,12 @@ namespace Wormhole
                     res = RmGetList(handle, out pnProcInfoNeeded, ref pnProcInfo, processInfo, ref lpdwRebootReasons);
 
                     if (res == 0)
-                    {
                         return processInfo;
-                    }
                     else
-                        throw new ("Could not list processes locking resource.");                    
+                        throw new("Could not list processes locking resource.");
                 }
                 else if (res != 0)
-                    throw new ("Could not list processes locking resource. Failed to get size of result.");                    
+                    throw new("Could not list processes locking resource. Failed to get size of result.");
             }
             finally
             {
@@ -140,7 +131,7 @@ namespace Wormhole
         {
             return rename(oldPath, newPath);
         }
-        
+
         [DllImport("msvcrt", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         private static extern int rename(
             [MarshalAs(UnmanagedType.LPStr)]

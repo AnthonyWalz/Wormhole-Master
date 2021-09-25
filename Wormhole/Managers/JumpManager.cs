@@ -2,12 +2,9 @@
 using System.Threading.Tasks;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
-using Sandbox.Game.GameSystems;
-using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.Managers;
-using Torch.Utils;
 using Wormhole.ViewModels;
 
 namespace Wormhole.Managers
@@ -22,11 +19,10 @@ namespace Wormhole.Managers
 
         public async Task<bool> StartJump(GateViewModel gateViewModel, MyPlayer player, MyCubeGrid grid)
         {
-            // TODO hyper jump effect
-            MyVisualScriptLogicProvider.ShowNotification("Opening the gate...",
-                (int) TimeSpan.FromSeconds(4).TotalMilliseconds, playerId: player.Identity.IdentityId);
+            MyVisualScriptLogicProvider.ShowNotification("Opening the gate...", (int)TimeSpan.FromSeconds(4).TotalMilliseconds, playerId: player.Identity.IdentityId);
             _effectsManager.NotifyJumpStatusChanged(JumpStatus.Started, gateViewModel, grid);
             await Task.Delay(TimeSpan.FromSeconds(12));
+
             return true;
         }
 

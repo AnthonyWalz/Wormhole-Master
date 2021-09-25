@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 using Torch;
 using Torch.Collections;
 using Torch.Views;
@@ -9,7 +8,7 @@ namespace Wormhole
 {
     public class Config : ViewModel
     {
-        [XmlArrayItem("Gate")] public MtObservableList<GateViewModel> WormholeGates { get; set; } = new ();
+        [XmlArrayItem("Gate")] public MtObservableList<GateViewModel> WormholeGates { get; set; } = new();
 
         [Display(Name = "Save Server On Grid Exit", Description = "Warning! May Cause Lag")]
         public bool SaveOnExit { get; set; }
@@ -48,9 +47,7 @@ namespace Wormhole
 
         public bool AutoSend { get; set; }
 
-        [Display(Name = "Keep Ownership",
-            Description =
-                "Keep ownership & builtBy on blocks. If false, all blocks will be transferred to player that requested jump")]
+        [Display(Name = "Keep Ownership", Description = "Keep ownership & builtBy on blocks. If false, all blocks will be transferred to player that requested jump")]
         public bool KeepOwnership { get; set; }
     }
 }

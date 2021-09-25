@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using ProtoBuf;
 using VRageMath;
-using Wormhole.ViewModels;
 
 namespace Wormhole.Managers
 {
@@ -13,8 +12,7 @@ namespace Wormhole.Managers
         [ProtoMember(3)] public Vector3D Forward { get; set; }
         [ProtoMember(4)] public float Size { get; set; }
         [ProtoMember(5)] public string ParticleId { get; set; }
-
-        [ProtoMember(6)] public List<DestinationData> Destinations { get; set; } = new ();
+        [ProtoMember(6)] public List<DestinationData> Destinations { get; set; } = new();
     }
 
     [ProtoContract]

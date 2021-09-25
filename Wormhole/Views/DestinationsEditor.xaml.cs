@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Windows;
+﻿using System.Windows;
 using Wormhole.ViewModels;
 using Wormhole.Views.Converters;
 
@@ -36,11 +35,10 @@ namespace Wormhole.Views
         {
             if (TypeComboBox.SelectedItem is not ValueDescription destinationType)
                 return;
-            
-            var viewModel = DestinationViewModel.Create((DestinationType) destinationType.Value);
+
+            var viewModel = DestinationViewModel.Create((DestinationType)destinationType.Value);
             _viewModel.Destinations.Add(viewModel);
             ElementsDataGrid.SelectedItem = viewModel;
-            
             ButtonsPanel.Visibility = Visibility.Visible;
             AddConfirmationPanel.Visibility = Visibility.Hidden;
         }

@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 using NLog;
 using Sandbox;
 using Sandbox.Common.ObjectBuilders;
-using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Torch.Mod;
@@ -20,9 +17,7 @@ using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.Components;
-using VRage.Groups;
 using VRage.Library.Utils;
-using VRage.ModAPI;
 using VRageMath;
 
 namespace Wormhole
@@ -34,8 +29,7 @@ namespace Wormhole
         public static bool UpdateGridsPositionAndStop(ICollection<MyObjectBuilder_CubeGrid> grids, Vector3D newPosition)
         {
             var biggestGrid = grids.OrderByDescending(static b => b.CubeBlocks.Count).First();
-            newPosition -= FindGridsBoundingSphere(grids, biggestGrid).Center -
-                           biggestGrid.PositionAndOrientation!.Value.Position;
+            newPosition -= FindGridsBoundingSphere(grids, biggestGrid).Center - biggestGrid.PositionAndOrientation!.Value.Position;
             var delta = biggestGrid.PositionAndOrientation!.Value.Position;
 
             return grids.All(grid =>
@@ -48,18 +42,15 @@ namespace Wormhole
 
                 var gridPositionOrientation = grid.PositionAndOrientation.Value;
                 if (grid == biggestGrid)
-                {
                     gridPositionOrientation.Position = newPosition;
-                }
                 else
-                {
                     gridPositionOrientation.Position = newPosition + gridPositionOrientation.Position - delta;
-                }
+
                 grid.PositionAndOrientation = gridPositionOrientation;
 
                 // reset velocity
-                grid.AngularVelocity = new ();
-                grid.LinearVelocity = new ();
+                grid.AngularVelocity = new();
+                grid.LinearVelocity = new();
                 return true;
             });
         }
@@ -95,6 +86,7 @@ namespace Wormhole
 
             if (ownerCnt > 0 && gridOwnerList[0] != 0)
                 return gridOwnerList[0];
+
             if (ownerCnt > 1)
                 return gridOwnerList[1];
 
@@ -115,15 +107,17 @@ namespace Wormhole
         public static Vector3D? FindFreePos(BoundingSphereD gate, float sphereradius)
         {
             var rand = new Random();
-
             MyEntity safezone = null;
             var entities = MyEntities.GetEntitiesInSphere(ref gate);
+
             foreach (var myentity in entities)
+            {
                 if (myentity is MySafeZone)
                     safezone = myentity;
-            return MyEntities.FindFreePlaceCustom(
-                gate.RandomToUniformPointInSphere(rand.NextDouble(), rand.NextDouble(), rand.NextDouble()),
-                sphereradius, 20, 5, 1, 0, safezone);
+            }
+
+            return MyEntities.FindFreePlaceCustom(gate.RandomToUniformPointInSphere(rand.NextDouble(), rand.NextDouble(), rand.NextDouble()),
+                                                  sphereradius, 20, 5, 1, 0, safezone);
         }
 
         public static string LegalCharOnly(string text)
@@ -135,6 +129,7 @@ namespace Wormhole
         {
             Vector3? vector = null;
             var gridradius = 0F;
+
             foreach (var mygrid in grids)
             {
                 var gridSphere = mygrid.CalculateBoundingSphere();
@@ -150,36 +145,32 @@ namespace Wormhole
                 if (newRadius > gridradius)
                     gridradius = newRadius;
             }
-
-            return (float) new BoundingSphereD(vector.Value, gridradius).Radius;
+            return (float)new BoundingSphereD(vector.Value, gridradius).Radius;
         }
 
-        public static BoundingSphereD FindGridsBoundingSphere(IEnumerable<MyObjectBuilder_CubeGrid> grids,
-            MyObjectBuilder_CubeGrid biggestGrid)
+        public static BoundingSphereD FindGridsBoundingSphere(IEnumerable<MyObjectBuilder_CubeGrid> grids, MyObjectBuilder_CubeGrid biggestGrid)
         {
             var boxD = BoundingBoxD.CreateInvalid();
             boxD.Include(biggestGrid.CalculateBoundingBox());
             var matrix = biggestGrid.PositionAndOrientation!.Value.GetMatrix();
             var matrix2 = MatrixD.Invert(matrix);
             var array = new Vector3D[8];
+
             foreach (var grid in grids)
             {
                 if (grid == biggestGrid) continue;
 
                 BoundingBoxD box = grid.CalculateBoundingBox();
-                var myOrientedBoundingBoxD =
-                    new MyOrientedBoundingBoxD(box, grid.PositionAndOrientation!.Value.GetMatrix());
+                var myOrientedBoundingBoxD = new MyOrientedBoundingBoxD(box, grid.PositionAndOrientation!.Value.GetMatrix());
                 myOrientedBoundingBoxD.Transform(matrix2);
                 myOrientedBoundingBoxD.GetCorners(array, 0);
 
                 foreach (var point in array)
-                {
                     boxD.Include(point);
-                }
             }
 
             var boundingSphereD = BoundingSphereD.CreateFromBoundingBox(boxD);
-            return new (new MyOrientedBoundingBoxD(boxD, matrix).Center, boundingSphereD.Radius);
+            return new(new MyOrientedBoundingBoxD(boxD, matrix).Center, boundingSphereD.Radius);
         }
 
         public static void KillCharacter(MyCharacter character)
@@ -187,8 +178,8 @@ namespace Wormhole
             Log.Info("killing character " + character.DisplayName);
             if (character.IsUsing is MyCockpit cockpit)
                 cockpit.RemovePilot();
-            character.GetIdentity()?.ChangeCharacter(null);
 
+            character.GetIdentity()?.ChangeCharacter(null);
             character.EnableBag(false);
             character.Close();
         }
@@ -201,7 +192,6 @@ namespace Wormhole
                     continue;
                 KillCharacter(entity);
             }
-
             characters.Clear();
         }
 
@@ -209,10 +199,9 @@ namespace Wormhole
         {
             // wasted 15 hours to find this fucking HierarchyComponent trap
             cockpit.Pilot = null;
-            var component = cockpit.ComponentContainer.Components.FirstOrDefault(static b =>
-                b.Component is MyObjectBuilder_HierarchyComponentBase);
+            var component = cockpit.ComponentContainer.Components.FirstOrDefault(static b => b.Component is MyObjectBuilder_HierarchyComponentBase);
 
-            ((MyObjectBuilder_HierarchyComponentBase) component?.Component)?.Children.Clear();
+            ((MyObjectBuilder_HierarchyComponentBase)component?.Component)?.Children.Clear();
         }
 
         public static bool TryParseGps(string raw, out string name, out Vector3D position, out Color color)
@@ -220,38 +209,36 @@ namespace Wormhole
             name = default;
             position = default;
             color = default;
-            
+
             var parts = raw.Split(':');
             if (parts.Length != 7)
                 return false;
+
             name = parts[1];
             if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var xCord) ||
                 !double.TryParse(parts[3], NumberStyles.Float, CultureInfo.InvariantCulture, out var yCord) ||
                 !double.TryParse(parts[4], NumberStyles.Float, CultureInfo.InvariantCulture, out var zCord))
                 return false;
-            position = new (xCord, yCord, zCord);
+
+            position = new(xCord, yCord, zCord);
             color = ColorUtils.TranslateColor(parts[5]);
             return true;
         }
 
         public static void SendConnectToServer(string address, ulong clientId)
         {
-            ModCommunication.SendMessageTo(
-                new JoinServerMessage(ToIpEndpoint(address, MySandboxGame.ConfigDedicated.ServerPort).ToString()),
-                clientId);
+            ModCommunication.SendMessageTo(new JoinServerMessage(ToIpEndpoint(address, MySandboxGame.ConfigDedicated.ServerPort).ToString()), clientId);
         }
-        
+
         public static IPEndPoint ToIpEndpoint(string hostNameOrAddress, int defaultPort)
         {
             var parts = hostNameOrAddress.Split(':');
-            
+
             if (parts.Length == 2)
                 defaultPort = int.Parse(parts[1]);
-            
+
             var addrs = Dns.GetHostAddresses(parts[0]);
-            return new (addrs.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork)
-                        ??
-                        addrs.First(), defaultPort);
+            return new(addrs.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork) ?? addrs.First(), defaultPort);
         }
 
         public static Vector3D PickRandomPointInSpheres(Vector3D center, float innerRadius, float outerRadius)
@@ -274,7 +261,7 @@ namespace Wormhole
             }
             */
         }
-        
+
         private static Vector3D GetRandomPoint(BoundingSphereD sphere)
         {
             var u = MyRandom.Instance.NextDouble();
@@ -297,7 +284,7 @@ namespace Wormhole
 
             public static TransferFileInfo ParseFileName(string path)
             {
-                TransferFileInfo info = new ();
+                TransferFileInfo info = new();
                 var pathItems = path.Split('_');
                 if (pathItems.Length != 4) return null;
 
@@ -306,22 +293,21 @@ namespace Wormhole
                 info.PlayerName = pathItems[2];
 
                 var lastPart = pathItems[3];
-                if (lastPart.EndsWith(".sbcB5")) lastPart = lastPart.Substring(0, lastPart.Length - ".sbcB5".Length);
-                info.GridName = lastPart;
+                if (lastPart.EndsWith(".sbcB5"))
+                    lastPart = lastPart.Substring(0, lastPart.Length - ".sbcB5".Length);
 
+                info.GridName = lastPart;
                 return info;
             }
 
             public string CreateLogString()
             {
-                return
-                    $"dest: {DestinationWormhole};steamid: {SteamUserId};playername: {PlayerName};gridName: {GridName};";
+                return $"dest: {DestinationWormhole};steamid: {SteamUserId};playername: {PlayerName};gridName: {GridName};";
             }
 
             public string CreateFileName()
             {
-                return
-                    $"{DestinationWormhole}_{SteamUserId}_{LegalCharOnly(PlayerName)}_{LegalCharOnly(GridName)}";
+                return $"{DestinationWormhole}_{SteamUserId}_{LegalCharOnly(PlayerName)}_{LegalCharOnly(GridName)}";
             }
         }
     }

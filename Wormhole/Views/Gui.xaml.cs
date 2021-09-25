@@ -20,12 +20,11 @@ namespace Wormhole.Views
         }
 
         private Plugin Plugin { get; }
-        private GateViewModel _selectedGate = new ();
+        private GateViewModel _selectedGate = new();
 
         private void SaveButton_OnClick(object sender, RoutedEventArgs e)
         {
             Plugin.Save();
-            //Utilities.WormholeGateConfigUpdate();
         }
 
         private void Add_OnClick(object sender, RoutedEventArgs e)
@@ -45,7 +44,8 @@ namespace Wormhole.Views
             _selectedGate.Y = yCord;
             _selectedGate.Z = zCord;
 
-            if (Plugin.Config.WormholeGates.Any(b => b.Name == _selectedGate.Name)) return;
+            if (Plugin.Config.WormholeGates.Any(b => b.Name == _selectedGate.Name))
+                return;
 
             Plugin.Config.WormholeGates.Add(_selectedGate);
             Nameinput.Text = string.Empty;
@@ -55,7 +55,7 @@ namespace Wormhole.Views
             Yinput.Text = string.Empty;
             Zinput.Text = string.Empty;
             SendToHinput.Text = string.Empty;
-            _selectedGate = new ();
+            _selectedGate = new();
         }
 
         private void Del_OnClick(object sender, RoutedEventArgs e)
@@ -66,7 +66,8 @@ namespace Wormhole.Views
 
         private void Edit_OnClick(object sender, RoutedEventArgs e)
         {
-            if (ListServers.SelectedItem is not GateViewModel gate) return;
+            if (ListServers.SelectedItem is not GateViewModel gate)
+                return;
 
             Nameinput.Text = gate.Name;
             Descriptioninput.Text = gate.Description;
@@ -81,8 +82,7 @@ namespace Wormhole.Views
 
         private void DestinationsButton_OnClick(object sender, RoutedEventArgs e)
         {
-            if (_selectedGate is { } gate)
-                new DestinationsEditor(gate).ShowDialog();
+            if (_selectedGate is { } gate) new DestinationsEditor(gate).ShowDialog();
         }
     }
 }

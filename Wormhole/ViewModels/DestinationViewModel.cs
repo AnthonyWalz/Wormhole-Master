@@ -16,7 +16,7 @@ namespace Wormhole.ViewModels
 
         [Display(Name = "Id", Description = "Must be unique for all destinations in current gate (you can just put random string)")]
         public string Id { get; set; }
-        
+
         public static DestinationViewModel Create(DestinationType type)
         {
             return type switch
@@ -42,6 +42,7 @@ namespace Wormhole.ViewModels
         {
             if (Utilities.TryParseGps(Gps, out _, out var pos, out _))
                 return pos;
+
             return null;
         }
     }

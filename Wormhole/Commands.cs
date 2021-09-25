@@ -5,11 +5,8 @@ using System.Linq;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Multiplayer;
-using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.World;
-using Torch.API.Managers;
 using Torch.Commands;
 using Torch.Commands.Permissions;
 using Torch.Utils;
@@ -17,14 +14,13 @@ using VRage;
 using VRage.Game.ModAPI;
 using VRage.ObjectBuilders;
 using VRageMath;
-using Wormhole.Managers;
 
 namespace Wormhole
 {
     [Category("wormhole")]
     public class Commands : CommandModule
     {
-        public Plugin Plugin => (Plugin) Context.Plugin;
+        public Plugin Plugin => (Plugin)Context.Plugin;
 
         [Command("show", "shows wormholes")]
         [Permission(MyPromoteLevel.None)]
@@ -35,7 +31,6 @@ namespace Wormhole
                 var gps = wormholeGate.ToGps();
                 MySession.Static.Gpss.SendAddGps(Context.Player.IdentityId, ref gps);
             }
-
             Context.Respond("GPSs added to your list if it didn't already exist");
         }
 
@@ -46,13 +41,9 @@ namespace Wormhole
             foreach (var wormholeGate in Plugin.Config.WormholeGates)
             {
                 var gps = wormholeGate.ToGps();
-                foreach (var (_, identityId) in Sync.Players
-                    .GetPrivateField<ConcurrentDictionary<MyPlayer.PlayerId, long>>("m_playerIdentityIds"))
-                {
+                foreach (var (_, identityId) in Sync.Players.GetPrivateField<ConcurrentDictionary<MyPlayer.PlayerId, long>>("m_playerIdentityIds"))
                     MySession.Static.Gpss.SendAddGps(identityId, ref gps);
-                }
             }
-
             Context.Respond("GPSs added to everyone's list if it didn't already exist");
         }
 
@@ -60,21 +51,19 @@ namespace Wormhole
         [Permission(MyPromoteLevel.Admin)]
         public void SafeZone(float radius = -1)
         {
-            if (radius < 1) radius = (float) Plugin.Config.GateRadius;
+            if (radius < 1) radius = (float)Plugin.Config.GateRadius;
             var entities = MyEntities.GetEntities();
             if (entities != null)
-                foreach (var entity in entities.Where(static entity =>
-                    entity is MySafeZone && entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-SafeZone]")))
-                {
+            {
+                foreach (var entity in entities.Where(static entity => entity is MySafeZone && entity.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-SafeZone]")))
                     entity.Close();
-                }
+            }
 
             foreach (var server in Plugin.Config.WormholeGates)
             {
                 var ob = new MyObjectBuilder_SafeZone
                 {
-                    PositionAndOrientation =
-                        new MyPositionAndOrientation(new (server.X, server.Y, server.Z), Vector3.Forward, Vector3.Up),
+                    PositionAndOrientation = new MyPositionAndOrientation(new(server.X, server.Y, server.Z), Vector3.Forward, Vector3.Up),
                     PersistentFlags = MyPersistentEntityFlags2.InScene,
                     Shape = MySafeZoneShape.Sphere,
                     Radius = radius,
@@ -88,12 +77,10 @@ namespace Wormhole
                 MyEntities.CreateFromObjectBuilderAndAdd(ob, true);
             }
 
-            Context.Respond(
-                "Deleted all entities with '[NPC-IGNORE]_[Wormhole-SafeZone]' in them and readded Safezones to each Wormhole");
+            Context.Respond("Deleted all entities with '[NPC-IGNORE]_[Wormhole-SafeZone]' in them and readded Safezones to each Wormhole");
         }
 
-        [Command("addgates",
-            "Adds gates to each wormhole (type: 1 = regular, 2 = rotating, 3 = advanced rotating, 4 = regular 53blocks, 5 = rotating 53blocks, 6 = advanced rotating 53blocks) (selfowned: true = owned by you) (ownerid = id of who you want it owned by)")]
+        [Command("addgates", "Adds gates to each wormhole (type: 1 = regular, 2 = rotating, 3 = advanced rotating, 4 = regular 53blocks, 5 = rotating 53blocks, 6 = advanced rotating 53blocks) (selfowned: true = owned by you) (ownerid = id of who you want it owned by)")]
         [Permission(MyPromoteLevel.Admin)]
         public void AddGates(int type = 1, bool selfowned = false, long ownerid = 0L)
         {
@@ -101,12 +88,10 @@ namespace Wormhole
             {
                 var entities = MyEntities.GetEntities();
                 if (entities is { })
-                    foreach (var grid in entities
-                        .OfType<MyCubeGrid>()
-                        .Where(static b => b.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]")))
-                    {
+                {
+                    foreach (var grid in entities.OfType<MyCubeGrid>().Where(static b => b.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]")))
                         grid.Close();
-                    }
+                }
 
                 foreach (var server in Plugin.Config.WormholeGates)
                 {
@@ -126,6 +111,7 @@ namespace Wormhole
                     foreach (var grid in grids)
                     {
                         foreach (var cubeBlock in grid.CubeBlocks)
+                        {
                             if (selfowned)
                             {
                                 cubeBlock.Owner = Context.Player.IdentityId;
@@ -136,7 +122,7 @@ namespace Wormhole
                                 cubeBlock.Owner = ownerid;
                                 cubeBlock.BuiltBy = ownerid;
                             }
-
+                        }
                         objectBuilderList.Add(grid);
                     }
 
@@ -178,8 +164,7 @@ namespace Wormhole
                     MyEntities.Load(objectBuilderList, out _);
                 }
 
-                Context.Respond(
-                    "Deleted all entities with '[NPC-IGNORE]_[Wormhole-Gate]' in them and readded Gates to each Wormhole");
+                Context.Respond("Deleted all entities with '[NPC-IGNORE]_[Wormhole-Gate]' in them and readded Gates to each Wormhole");
             }
             catch
             {
@@ -222,10 +207,10 @@ namespace Wormhole
             if (Context.Player == null)
                 return;
 
-            var identity = (MyIdentity) Context.Player.Identity;
+            var identity = (MyIdentity)Context.Player.Identity;
             Utilities.KillCharacters(identity.SavedCharacters);
 
-            Sync.Players.KillPlayer((MyPlayer) Context.Player);
+            Sync.Players.KillPlayer((MyPlayer)Context.Player);
         }
     }
 }

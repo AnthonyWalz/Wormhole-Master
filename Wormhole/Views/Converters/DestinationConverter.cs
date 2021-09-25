@@ -13,6 +13,7 @@ namespace Wormhole.Views.Converters
         {
             if (value?.GetType().GetCustomAttribute<DestinationAttribute>()?.Type is { } type)
                 return type.Description();
+
             return "Unknown";
         }
 

@@ -22,10 +22,10 @@ namespace Wormhole.Mod
         private static readonly MySoundPair AfterSound = new MySoundPair("WormholeJumpAfter");
 
         public static JumpComponent Instance;
-        
+
         public readonly Dictionary<uint, GateDataMessage> Gates = new Dictionary<uint, GateDataMessage>();
         private readonly MyEntity3DSoundEmitter _soundEmitter = new MyEntity3DSoundEmitter(null);
-        
+
         private GateVisuals _gateVisuals => GateVisuals.Instance;
 
         public readonly List<SerializableDefinitionId> JdDefinitionIds = new List<SerializableDefinitionId>();
@@ -34,14 +34,18 @@ namespace Wormhole.Mod
         public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
         {
             Instance = this;
-            if (MyAPIGateway.Multiplayer.IsServer) return;
+            if (MyAPIGateway.Multiplayer.IsServer)
+                return;
+
             base.Init(sessionComponent);
             RegisterHandlers();
         }
 
         public override void BeforeStart()
         {
-            if (MyAPIGateway.Multiplayer.IsServer) return;
+            if (MyAPIGateway.Multiplayer.IsServer)
+                return;
+
             base.BeforeStart();
             RequestGatesData();
         }
@@ -68,9 +72,11 @@ namespace Wormhole.Mod
             IMyEntity entity;
             IMyCubeGrid grid;
             GateDataMessage gate;
-            if (message == null || !fromServer || !MyAPIGateway.Entities.TryGetEntityById(message.GridId, out entity) ||
-                (grid = entity as IMyCubeGrid) == null || !Gates.TryGetValue(message.GateId, out gate))
+            if (message == null || !fromServer ||
+                    !MyAPIGateway.Entities.TryGetEntityById(message.GridId, out entity) ||
+                    (grid = entity as IMyCubeGrid) == null || !Gates.TryGetValue(message.GateId, out gate))
                 return;
+
             MyLog.Default?.WriteLine($"Jump status update {message.Status}");
             switch (message.Status)
             {
@@ -96,6 +102,7 @@ namespace Wormhole.Mod
             var message = MyAPIGateway.Utilities.SerializeFromBinary<GatesMessage>(data);
             if (message == null || !fromServer)
                 return;
+
             MyLog.Default?.WriteLine($"Loaded {message.Messages} gates");
             OnGatesData(message.Messages);
             OnJdData(message.WormholeDriveIds, message.WorkWithAllJds);
@@ -105,15 +112,8 @@ namespace Wormhole.Mod
         private void OnJumpStarted(GateDataMessage gate, IMyCubeGrid grid)
         {
             _gateVisuals.EnableEffectForGate(gate.Id);
-            _soundEmitter.Entity = (MyEntity) grid;
+            _soundEmitter.Entity = (MyEntity)grid;
             _soundEmitter.PlaySound(ChargeSound);
-            
-            // if (MyAPIGateway.Session.ControlledObject is IMyShipController &&
-            //     ((IMyShipController)MyAPIGateway.Session.ControlledObject).CubeGrid == grid)
-            // {
-            //     MyAPIGateway.Session.SetCameraController(MyCameraControllerEnum.SpectatorFixed,
-            //         position: gate.Position + gate.Forward * (gate.Size * 2));
-            // }
         }
 
         private void OnJumpReady(GateDataMessage gate, IMyCubeGrid grid)
@@ -126,21 +126,13 @@ namespace Wormhole.Mod
             var matrix = grid.WorldMatrix;
             matrix.Translation = destination;
             grid.Teleport(matrix);
-            
-            // if (MyAPIGateway.Session.ControlledObject is IMyShipController &&
-            //     ((IMyShipController)MyAPIGateway.Session.ControlledObject).CubeGrid == grid)
-            // {
-            //     MyAPIGateway.Session.SetCameraController(MyCameraControllerEnum.Entity, grid);
-            // }
         }
+
         private void OnJumpSucceeded(GateDataMessage gate, IMyCubeGrid grid)
         {
             _gateVisuals.DisableEffectForGate(gate.Id);
-            if (MyAPIGateway.Session.ControlledObject is IMyShipController &&
-                ((IMyShipController)MyAPIGateway.Session.ControlledObject).CubeGrid == grid)
-            {
+            if (MyAPIGateway.Session.ControlledObject is IMyShipController && ((IMyShipController)MyAPIGateway.Session.ControlledObject).CubeGrid == grid)
                 _soundEmitter.PlaySound(AfterSound, true);
-            }
         }
 
         private void OnGatesData(IEnumerable<GateDataMessage> gates)
