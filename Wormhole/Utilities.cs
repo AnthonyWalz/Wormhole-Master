@@ -17,7 +17,6 @@ using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.Components;
-using VRage.Library.Utils;
 using VRageMath;
 
 namespace Wormhole
@@ -25,12 +24,22 @@ namespace Wormhole
     internal class Utilities
     {
         public static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        private static readonly Random RandomPos = new Random();
 
         public static bool UpdateGridsPositionAndStop(ICollection<MyObjectBuilder_CubeGrid> grids, Vector3D newPosition)
         {
             var biggestGrid = grids.OrderByDescending(static b => b.CubeBlocks.Count).First();
-            newPosition -= FindGridsBoundingSphere(grids, biggestGrid).Center - biggestGrid.PositionAndOrientation!.Value.Position;
             var delta = biggestGrid.PositionAndOrientation!.Value.Position;
+
+            // make sure admin didnt failed here.
+            if (Plugin.Instance.Config.MinDistance > Plugin.Instance.Config.MaxDistance)
+            {
+                Plugin.Instance.Config.MinDistance = 1;
+                Plugin.Instance.Config.MaxDistance = 5;
+            }
+
+            newPosition = RandomPositionFromGatePoint(newPosition, RandomPos.Next(Plugin.Instance.Config.MinDistance, Plugin.Instance.Config.MaxDistance));
+            newPosition -= FindGridsBoundingSphere(grids, biggestGrid).Center - biggestGrid.PositionAndOrientation!.Value.Position;
 
             return grids.All(grid =>
             {
@@ -241,37 +250,17 @@ namespace Wormhole
             return new(addrs.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork) ?? addrs.First(), defaultPort);
         }
 
-        public static Vector3D PickRandomPointInSpheres(Vector3D center, float innerRadius, float outerRadius)
+        public static Vector3D RandomPositionFromGatePoint(Vector3D GatePoint, double distance)
         {
-            return center;
+            Random NewRandom = new Random();
+            var Zrand = (NewRandom.NextDouble() * 2) - 1;
+            var PI = NewRandom.NextDouble() * 2 * Math.PI;
+            var ZrandSqrt = Math.Sqrt(1 - (Zrand * Zrand));
+            var direction = new Vector3D(ZrandSqrt * Math.Cos(PI), ZrandSqrt * Math.Sin(PI), Zrand);
 
-            /* disable till solution, if ever needed.
-            var innerSphere = new BoundingSphereD(center, innerRadius);
-            var outerSphere = new BoundingSphereD(center, outerRadius);
-
-            for (var i = 0; i < 15; i++)
-            {
-                var pointInner = GetRandomPoint(innerSphere);
-                var pointOuter = GetRandomPoint(outerSphere);
-            
-                var n = MyRandom.Instance.NextDouble();
-
-                // idk how compute random point between 2 spheres, fucking math
-                // TODO add math
-            }
-            */
-        }
-
-        private static Vector3D GetRandomPoint(BoundingSphereD sphere)
-        {
-            var u = MyRandom.Instance.NextDouble();
-            var v = MyRandom.Instance.NextDouble();
-            var theta = 2 * Math.PI * u;
-            var phi = Math.Acos(2 * v - 1);
-            var x = sphere.Center.X + sphere.Radius * Math.Sin(phi) * Math.Cos(theta);
-            var y = sphere.Center.Y + sphere.Radius * Math.Sin(phi) * Math.Sin(theta);
-            var z = sphere.Center.Z + sphere.Radius * Math.Cos(phi);
-            return new(x, y, z);
+            direction.Normalize();
+            GatePoint += direction * -2;
+            return GatePoint + (direction * distance);
         }
 
         // parsing helper

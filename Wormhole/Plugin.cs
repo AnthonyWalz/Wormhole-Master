@@ -5,6 +5,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using NLog;
@@ -17,6 +19,7 @@ using Sandbox.Game.Entities.Blocks;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
+using Sandbox.ModAPI;
 using Torch;
 using Torch.API;
 using Torch.API.Plugins;
@@ -239,9 +242,8 @@ namespace Wormhole
             MyJumpDrive wormholeDrive, GateViewModel gateViewModel)
         {
             var pos = dest.TryParsePosition() ?? throw new InvalidOperationException($"Invalid gps position {dest.Gps}");
-            var point = Utilities.PickRandomPointInSpheres(pos, dest.InnerRadius, dest.OuterRadius);
             var box = grids.Select(static b => b.PositionComp.WorldAABB).Aggregate(static (a, b) => a.Include(b));
-            var toGate = new BoundingSphereD(point, Config.GateRadius);
+            var toGate = new BoundingSphereD(pos, Config.GateRadius);
             var freePos = Utilities.FindFreePos(toGate, (float)BoundingSphereD.CreateFromBoundingBox(box).Radius);
 
             if (freePos is null)
@@ -251,7 +253,7 @@ namespace Wormhole
 
             MyVisualScriptLogicProvider.CreateLightning(gateViewModel.Position);
             Utilities.UpdateGridPositionAndStopLive(wormholeDrive.CubeGrid, freePos.Value);
-            MyVisualScriptLogicProvider.CreateLightning(point);
+            MyVisualScriptLogicProvider.CreateLightning(pos);
         }
 
         private void ProcessGateJump(GateDestinationViewModel dest, MyCubeGrid grid, IReadOnlyCollection<MyCubeGrid> grids,
@@ -291,6 +293,23 @@ namespace Wormhole
                 _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Perform, gateViewModel, grid);
 
                 MyVisualScriptLogicProvider.CreateLightning(gateViewModel.Position);
+
+                var JumpTo = dest.Name;
+                var PlayerName = playerInCharge.DisplayName;
+                Log.Warn($"Player {PlayerName} used wormhole to jump to gate {JumpTo}");
+
+                if (Config.JumpOutNotification != string.Empty)
+                {
+                    var JumpOut = Config.JumpOutNotification;
+
+                    if (JumpOut.Contains("{PlayerName}"))
+                        JumpOut = Regex.Replace(JumpOut, @"{PlayerName}", $"{PlayerName}");
+
+                    if (JumpOut.Contains("{JumpTo}"))
+                        JumpOut = Regex.Replace(JumpOut, @"{JumpTo}", $"{JumpTo}");
+
+                    MyAPIGateway.Utilities.SendMessage(JumpOut);
+                }
 
                 var objectBuilders = new List<MyObjectBuilder_CubeGrid>();
                 foreach (var mygrid in grids)
@@ -376,7 +395,7 @@ namespace Wormhole
 
             var changes = false;
 
-            //if file not null if file exists if file is done being sent and if file hasnt been received before
+            // if file not null if file exists if file is done being sent and if file hasnt been received before
             foreach (var file in Directory.EnumerateFiles(_gridDir, "*.sbc").Where(s => Path.GetFileNameWithoutExtension(s).Split('_')[0] == wormholeName))
             {
                 var fileName = Path.GetFileName(file);
@@ -393,6 +412,8 @@ namespace Wormhole
                 TransferFile transferFile;
                 try
                 {
+                    // prevent IO read crash on locked file by other plugin.
+                    Thread.Sleep(100);
                     using var stream = File.OpenRead(file);
                     using var decompressStream = new GZipStream(stream, CompressionMode.Decompress);
 
@@ -524,6 +545,19 @@ namespace Wormhole
             }
 
             MyVisualScriptLogicProvider.CreateLightning(gatePosition);
+
+            var PlayerName = fileTransferInfo.PlayerName;
+            Log.Warn($"Player {PlayerName} used wormhole to jump to this server.");
+
+            if (Config.JumpInNotification != string.Empty)
+            {
+                var JumpIn = Config.JumpInNotification;
+
+                if (JumpIn.Contains("{PlayerName}"))
+                    JumpIn = Regex.Replace(JumpIn, @"{PlayerName}", $"{PlayerName}");
+
+                MyAPIGateway.Utilities.SendMessage(JumpIn);
+            }
         }
 
         #endregion

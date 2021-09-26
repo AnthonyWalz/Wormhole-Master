@@ -31,10 +31,6 @@ namespace Wormhole.ViewModels
     [Destination(DestinationType.InternalGps)]
     public class InternalDestinationViewModel : DestinationViewModel
     {
-        [Display(Name = "Inner Radius", Description = "Inner radius of spawn sphere. Leave 0 to disable.")]
-        public int InnerRadius { get; set; }
-        [Display(Name = "Outer Radius", Description = "Outer radius of spawn sphere. Leave same as inner to disable.")]
-        public int OuterRadius { get; set; }
         [Display(Name = "GPS", Description = "Destination gps for gate. Yes, this will not require exit gate, just gps.")]
         public string Gps { get; set; }
 
