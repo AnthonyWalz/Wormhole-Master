@@ -1,10 +1,13 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
+using Sandbox.Game.GameSystems;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.Commands;
@@ -12,6 +15,7 @@ using Torch.Commands.Permissions;
 using Torch.Utils;
 using VRage;
 using VRage.Game.ModAPI;
+using VRage.Network;
 using VRage.ObjectBuilders;
 using VRageMath;
 
@@ -90,7 +94,9 @@ namespace Wormhole
                 if (entities is { })
                 {
                     foreach (var grid in entities.OfType<MyCubeGrid>().Where(static b => b.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]")))
+                    {
                         grid.Close();
+                    }
                 }
 
                 foreach (var server in Plugin.Config.WormholeGates)
@@ -164,7 +170,168 @@ namespace Wormhole
                     MyEntities.Load(objectBuilderList, out _);
                 }
 
+                var entitiesRescan = MyEntities.GetEntities();
+                if (entitiesRescan is { })
+                {
+                    foreach (var grid in entitiesRescan.OfType<MyCubeGrid>().Where(static b => b.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]")))
+                    {
+                        _ = MyGravityProviderSystem.CalculateNaturalGravityInPoint(grid.PositionComp.GetPosition(), out var ingravitynow);
+                        if (ingravitynow > 0)
+                        {
+                            if (!grid.IsStatic)
+                            {
+                                grid.Physics?.ClearSpeed();
+                                Context.Respond("Converting to station " + grid.DisplayName);
+                                grid.OnConvertedToStationRequest();
+                                // if was in safezone without permissions to convert, force convert.
+                                if (!grid.IsStatic)
+                                    MyMultiplayer.RaiseEvent(grid, (MyCubeGrid x) => new Action(x.ConvertToStatic), MyEventContext.Current.Sender);
+                            }
+                        }
+                    }
+                }
+
                 Context.Respond("Deleted all entities with '[NPC-IGNORE]_[Wormhole-Gate]' in them and readded Gates to each Wormhole");
+            }
+            catch
+            {
+                Context.Respond("Error: make sure you add the mod for the gates you are using");
+            }
+        }
+
+        [Command("addonegate", "Adds one gate to gate position by gate name as set in config, (type: 1 = regular, 2 = rotating, 3 = advanced rotating, 4 = regular 53blocks, 5 = rotating 53blocks, 6 = advanced rotating 53blocks) (selfowned: true = owned by you) (ownerid = id of who you want it owned by)")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void AddOneGate(int type = 1, string Name = "error", bool selfowned = false, long ownerid = 0L)
+        {
+            try
+            {
+                if (Name == "error")
+                {
+                    Context.Respond("Please provide Gate Name as set in configuration. !addonegate PrefabNum GateName");
+                    return;
+                }
+
+                var entities = MyEntities.GetEntities();
+                var GateFound = false;
+
+                foreach (var server in Plugin.Config.WormholeGates)
+                {
+                    if (server.Name != Name)
+                        continue;
+
+                    GateFound = true;
+
+                    var prefab = type switch
+                    {
+                        2 => "WORMHOLE_ROTATING",
+                        3 => "WORMHOLE_ROTATING_ADVANCED",
+                        4 => "WORMHOLE_53_BLOCKS",
+                        5 => "WORMHOLE_ROTATING_53_BLOCKS",
+                        6 => "WORMHOLE_ROTATING_ADVANCED_53_BLOCKS",
+                        _ => "WORMHOLE"
+                    };
+
+                    var grids = MyPrefabManager.Static.GetGridPrefab(prefab);
+                    var objectBuilderList = new List<MyObjectBuilder_EntityBase>();
+
+                    foreach (var grid in grids)
+                    {
+                        foreach (var cubeBlock in grid.CubeBlocks)
+                        {
+                            if (selfowned)
+                            {
+                                cubeBlock.Owner = Context.Player.IdentityId;
+                                cubeBlock.BuiltBy = Context.Player.IdentityId;
+                            }
+                            else
+                            {
+                                cubeBlock.Owner = ownerid;
+                                cubeBlock.BuiltBy = ownerid;
+                            }
+                        }
+                        objectBuilderList.Add(grid);
+                    }
+
+                    var firstGrid = true;
+                    double deltaX = 0;
+                    double deltaY = 0;
+                    double deltaZ = 0;
+
+                    foreach (var grid in grids)
+                    {
+                        var position = grid.PositionAndOrientation;
+                        var realPosition = position.Value;
+                        var currentPosition = realPosition.Position;
+
+                        if (firstGrid)
+                        {
+                            deltaX = server.X - currentPosition.X;
+                            deltaY = server.Y - currentPosition.Y;
+                            deltaZ = server.Z - currentPosition.Z;
+
+                            currentPosition.X = server.X;
+                            currentPosition.Y = server.Y;
+                            currentPosition.Z = server.Z;
+
+                            firstGrid = false;
+                        }
+                        else
+                        {
+                            currentPosition.X += deltaX;
+                            currentPosition.Y += deltaY;
+                            currentPosition.Z += deltaZ;
+                        }
+
+                        realPosition.Position = currentPosition;
+                        grid.PositionAndOrientation = realPosition;
+                    }
+
+                    if (entities is { })
+                    {
+                        foreach (var grid in entities.OfType<MyCubeGrid>().Where(static b => b.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]")))
+                        {
+                            var Gridposition = grid.PositionComp.GetPosition();
+                            var PositionX = Gridposition.X;
+                            var PositionY = Gridposition.Y;
+                            var PositionZ = Gridposition.Z;
+
+                            if (PositionX == server.X && PositionY == server.Y && PositionZ == server.Z)
+                            {
+                                grid.Close();
+                                Context.Respond("Deleted old gate grid at gate location");
+                            }
+                        }
+                    }
+
+                    MyEntities.RemapObjectBuilderCollection(objectBuilderList);
+                    MyEntities.Load(objectBuilderList, out _);
+                }
+
+                var entitiesRescan = MyEntities.GetEntities();
+                if (entitiesRescan is { } && GateFound)
+                {
+                    foreach (var grid in entitiesRescan.OfType<MyCubeGrid>().Where(static b => b.DisplayName.Contains("[NPC-IGNORE]_[Wormhole-Gate]")))
+                    {
+                        _ = MyGravityProviderSystem.CalculateNaturalGravityInPoint(grid.PositionComp.GetPosition(), out var ingravitynow);
+                        if (ingravitynow > 0)
+                        {
+                            if (!grid.IsStatic)
+                            {
+                                grid.Physics?.ClearSpeed();
+                                Context.Respond("Converting to station " + grid.DisplayName);
+                                grid.OnConvertedToStationRequest();
+                                // if was in safezone without permissions to convert, force convert.
+                                if (!grid.IsStatic)
+                                    MyMultiplayer.RaiseEvent(grid, (MyCubeGrid x) => new Action(x.ConvertToStatic), MyEventContext.Current.Sender);
+                            }
+                        }
+                    }
+                }
+
+                if (GateFound)
+                    Context.Respond("Added Gate to Wormhole GPS Position");
+                else
+                    Context.Respond("Didnt found gate configuration with that name! Abort");
             }
             catch
             {
