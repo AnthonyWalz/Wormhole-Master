@@ -119,6 +119,9 @@ namespace Wormhole.Managers
 
         private void GateDataHandler(ushort channel, byte[] data, ulong sender, bool fromServer)
         {
+            if (data is null)
+                return;
+
             if (data.Length != 1 || fromServer)
                 Plugin.Log.Warn($"Invalid gates request from {sender}");
             else
