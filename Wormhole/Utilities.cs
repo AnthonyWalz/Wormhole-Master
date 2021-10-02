@@ -208,7 +208,7 @@ namespace Wormhole
         {
             // wasted 15 hours to find this fucking HierarchyComponent trap
             cockpit.Pilot = null;
-            var component = cockpit.ComponentContainer.Components.FirstOrDefault(static b => b.Component is MyObjectBuilder_HierarchyComponentBase);
+            var component = cockpit.ComponentContainer?.Components?.FirstOrDefault(static b => b.Component is MyObjectBuilder_HierarchyComponentBase);
 
             ((MyObjectBuilder_HierarchyComponentBase)component?.Component)?.Children.Clear();
         }
