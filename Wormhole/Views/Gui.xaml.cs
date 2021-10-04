@@ -39,7 +39,12 @@ namespace Wormhole.Views
 
             _selectedGate.Name = Nameinput.Text;
             _selectedGate.Description = Descriptioninput.Text;
-            _selectedGate.HexColor = HexColorinput.Text;
+
+            if (HexColorinput.Text == "" || !HexColorinput.Text.Contains("#"))
+                _selectedGate.HexColor = "#FF75C9F1";
+            else
+                _selectedGate.HexColor = HexColorinput.Text;
+
             _selectedGate.X = xCord;
             _selectedGate.Y = yCord;
             _selectedGate.Z = zCord;
