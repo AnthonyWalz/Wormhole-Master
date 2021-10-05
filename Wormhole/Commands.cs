@@ -10,6 +10,7 @@ using Sandbox.Game.Entities;
 using Sandbox.Game.GameSystems;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
+using Sandbox.ModAPI;
 using Torch.Commands;
 using Torch.Commands.Permissions;
 using Torch.Utils;
@@ -33,7 +34,7 @@ namespace Wormhole
             foreach (var wormholeGate in Plugin.Config.WormholeGates)
             {
                 var gps = wormholeGate.ToGps();
-                MySession.Static.Gpss.SendAddGps(Context.Player.IdentityId, ref gps);
+                MyAPIGateway.Session?.GPS.AddGps(Context.Player.IdentityId, gps);
             }
             Context.Respond("GPSs added to your list if it didn't already exist");
         }
@@ -46,7 +47,7 @@ namespace Wormhole
             {
                 var gps = wormholeGate.ToGps();
                 foreach (var (_, identityId) in Sync.Players.GetPrivateField<ConcurrentDictionary<MyPlayer.PlayerId, long>>("m_playerIdentityIds"))
-                    MySession.Static.Gpss.SendAddGps(identityId, ref gps);
+                    MyAPIGateway.Session?.GPS.AddGps(identityId, gps);
             }
             Context.Respond("GPSs added to everyone's list if it didn't already exist");
         }
@@ -86,7 +87,7 @@ namespace Wormhole
 
         [Command("addgates", "Adds gates to each wormhole (type: 1 = regular, 2 = rotating, 3 = advanced rotating, 4 = regular 53blocks, 5 = rotating 53blocks, 6 = advanced rotating 53blocks) (selfowned: true = owned by you) (ownerid = id of who you want it owned by)")]
         [Permission(MyPromoteLevel.Admin)]
-        public void AddGates(int type = 1, bool selfowned = false, long ownerid = 0L)
+        public void AddGates(int type = 1, bool selfowned = false, long ownerid = 0L, bool setstatic = false)
         {
             try
             {
@@ -154,6 +155,13 @@ namespace Wormhole
                             currentPosition.Z = server.Z;
 
                             firstGrid = false;
+
+                            if (setstatic)
+                            {
+                                grid.IsStatic = true;
+                                grid.IsUnsupportedStation = true;
+                            }
+
                         }
                         else
                         {
@@ -201,7 +209,7 @@ namespace Wormhole
 
         [Command("addonegate", "Adds one gate to gate position by gate name as set in config, (type: 1 = regular, 2 = rotating, 3 = advanced rotating, 4 = regular 53blocks, 5 = rotating 53blocks, 6 = advanced rotating 53blocks) (selfowned: true = owned by you) (ownerid = id of who you want it owned by)")]
         [Permission(MyPromoteLevel.Admin)]
-        public void AddOneGate(int type = 1, string Name = "error", bool selfowned = false, long ownerid = 0L)
+        public void AddOneGate(int type = 1, string Name = "error", bool selfowned = false, long ownerid = 0L, bool setstatic = false)
         {
             try
             {
@@ -274,6 +282,12 @@ namespace Wormhole
                             currentPosition.Z = server.Z;
 
                             firstGrid = false;
+
+                            if (setstatic)
+                            {
+                                grid.IsStatic = true;
+                                grid.IsUnsupportedStation = true;
+                            }
                         }
                         else
                         {

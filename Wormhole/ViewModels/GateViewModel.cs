@@ -32,7 +32,8 @@ namespace Wormhole.ViewModels
                 Description = Description ?? string.Empty,
                 GPSColor = ColorUtils.TranslateColor(HexColor),
                 Coords = Position,
-                ShowOnHud = true
+                ShowOnHud = true,
+                AlwaysVisible = true
             };
         }
     }
