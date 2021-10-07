@@ -148,6 +148,20 @@ namespace Wormhole
 
         #endregion
 
+        public void TestEffectStart (GateViewModel gateViewModel, MyPlayer playerInCharge, MyCubeGrid Grid)
+        {
+            Task.Run(async () =>
+            {
+                var jumpTask = _jumpManager.StartJump(gateViewModel, playerInCharge, Grid);
+                await jumpTask;
+            });
+        }
+
+        public void TestEffectStop(GateViewModel gateViewModel, MyCubeGrid Grid)
+        {
+            _clientEffectsManager.NotifyJumpStatusChanged(JumpStatus.Succeeded, gateViewModel, Grid);
+        }
+
         #region Outgoing Transferring
 
         private readonly List<MyEntity> _tmpEntities = new();

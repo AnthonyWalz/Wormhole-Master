@@ -15,10 +15,12 @@ using Torch.Commands;
 using Torch.Commands.Permissions;
 using Torch.Utils;
 using VRage;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRageMath;
+using Wormhole.ViewModels;
 
 namespace Wormhole
 {
@@ -346,6 +348,135 @@ namespace Wormhole
                     Context.Respond("Added Gate to Wormhole GPS Position");
                 else
                     Context.Respond("Didnt found gate configuration with that name! Abort");
+            }
+            catch
+            {
+                Context.Respond("Error: make sure you add the mod for the gates you are using");
+            }
+        }
+
+        [Command("showeffect", "Show gate Effect on gate by gate name, need to have grid with jumpdrive near gate in 500m")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ShowEffectonGate(string Name = "error")
+        {
+            try
+            {
+                if (Name == "error")
+                {
+                    Context.Respond("Please provide Gate Name as set in configuration.");
+                    return;
+                }
+
+                GateViewModel GateModel = new GateViewModel();
+
+                foreach (var server in Plugin.Config.WormholeGates)
+                {
+                    if (server.Name != Name)
+                        continue;
+
+                    GateModel = server;
+                    break;
+                }
+
+                IMyPlayer player = Context.Player;
+                if (player == null || GateModel == null || GateModel.Position == null)
+                {
+                    Context.Respond("Didnt found gate configuration with that name! Abort");
+                    return;
+                }
+
+                var gate = new BoundingSphereD(GateModel.Position, 500);
+                List<MyEntity> _tmpEntities = new();
+                MyCubeGrid FoundGrid = null;
+
+                MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref gate, _tmpEntities, MyEntityQueryType.Dynamic);
+
+                foreach (var grid in _tmpEntities.OfType<MyCubeGrid>())
+                {
+                    if (grid != null)
+                    {
+                        var JumpDriveCheck = grid.GridSystems?.TerminalSystem?.Blocks.OfType<MyJumpDrive>().ToList().Count();
+
+                        if (JumpDriveCheck != null && JumpDriveCheck > 0)
+                        {
+                            FoundGrid = grid;
+                            break;
+                        }
+                    }
+                }
+
+                if (FoundGrid != null)
+                {
+                    Plugin.TestEffectStart(GateModel, (MyPlayer)player, FoundGrid);
+                    Context.Respond("Showing Effect now");
+                    return;
+                }
+
+                Context.Respond("Didnt found grid nearby with jumpdrive on it! Abort");
+            }
+            catch
+            {
+                Context.Respond("Error: make sure you add the mod for the gates you are using");
+            }
+        }
+
+        [Command("stopeffect", "Show gate Effect on gate by gate name, need to have grid with jumpdrive near gate in 500m")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void StopEffectonGate(string Name = "error")
+        {
+            try
+            {
+                if (Name == "error")
+                {
+                    Context.Respond("Please provide Gate Name as set in configuration.");
+                    return;
+                }
+
+                GateViewModel GateModel = new GateViewModel();
+
+                foreach (var server in Plugin.Config.WormholeGates)
+                {
+                    if (server.Name != Name)
+                        continue;
+
+                    GateModel = server;
+                    break;
+                }
+
+                if (GateModel == null || GateModel.Position == null)
+                {
+                    Context.Respond("Didnt found gate configuration with that name! Abort");
+                    return;
+                }
+
+                var gate = new BoundingSphereD(GateModel.Position, 500);
+                List<MyEntity> _tmpEntities = new();
+                MyCubeGrid FoundGrid = null;
+
+                MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref gate, _tmpEntities, MyEntityQueryType.Dynamic);
+
+                foreach (var grid in _tmpEntities.OfType<MyCubeGrid>())
+                {
+                    if (grid != null)
+                    {
+                        var JumpDriveCheck = grid.GridSystems?.TerminalSystem?.Blocks.OfType<MyJumpDrive>().ToList().Count();
+
+                        if (JumpDriveCheck != null && JumpDriveCheck > 0)
+                        {
+                            FoundGrid = grid;
+                            break;
+                        }
+                    }
+                }
+
+                if (FoundGrid != null)
+                {
+                    Plugin.TestEffectStop(GateModel, FoundGrid);
+                    Context.Respond("Stopping Effect now");
+                    return;
+                }
+
+                Context.Respond("Didnt found grid nearby with jumpdrive on it! Abort");
             }
             catch
             {
