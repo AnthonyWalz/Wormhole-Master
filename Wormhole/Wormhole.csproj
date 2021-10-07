@@ -179,6 +179,7 @@
     <PackageReference Include="PropertyChanged.Fody" Version="3.3.3.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HelpCommand.cs" />
     <Compile Include="Managers\ClientEffectsManager.cs" />
     <Compile Include="Managers\DestinationManager.cs" />
     <Compile Include="Managers\GateDataMessage.cs" />
