@@ -1,0 +1,155 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Sandbox.Game.Entities;
+using Sandbox.ModAPI;
+using VRage.Game;
+using VRage.Game.Components;
+using VRage.Game.Entity;
+using VRage.Game.ModAPI;
+using VRage.ModAPI;
+using VRage.ObjectBuilders;
+using VRage.Utils;
+using VRageMath;
+
+namespace Wormhole.Mod
+{
+    [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
+    public class JumpComponent : MySessionComponentBase
+    {
+        private static readonly MySoundPair ChargeSound = new MySoundPair("WormholeJumpCharge");
+        private static readonly MySoundPair JumpSound = new MySoundPair("WormholeJumpPerform");
+        private static readonly MySoundPair AfterSound = new MySoundPair("WormholeJumpAfter");
+
+        public static JumpComponent Instance;
+
+        public readonly Dictionary<uint, GateDataMessage> Gates = new Dictionary<uint, GateDataMessage>();
+        private readonly MyEntity3DSoundEmitter _soundEmitter = new MyEntity3DSoundEmitter(null);
+
+        private GateVisuals _gateVisuals => GateVisuals.Instance;
+
+        public readonly List<SerializableDefinitionId> JdDefinitionIds = new List<SerializableDefinitionId>();
+        public bool? WorkWithAllJds;
+
+        public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
+        {
+            Instance = this;
+            if (MyAPIGateway.Multiplayer.IsServer)
+                return;
+
+            base.Init(sessionComponent);
+            RegisterHandlers();
+        }
+
+        public override void BeforeStart()
+        {
+            if (MyAPIGateway.Multiplayer.IsServer)
+                return;
+
+            base.BeforeStart();
+            RequestGatesData();
+        }
+
+        #region Netowrking
+
+        private const ushort JumpStatusNetId = 3456;
+        private const ushort GateDataNetId = 3457;
+
+        private void RegisterHandlers()
+        {
+            MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(JumpStatusNetId, JumpStatusHandler);
+            MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(GateDataNetId, GateDataHandler);
+        }
+
+        private static void RequestGatesData()
+        {
+            MyAPIGateway.Multiplayer.SendMessageToServer(GateDataNetId, new byte[1]);
+        }
+
+        private void JumpStatusHandler(ushort channel, byte[] data, ulong sender, bool fromServer)
+        {
+            var message = MyAPIGateway.Utilities.SerializeFromBinary<JumpStatusMessage>(data);
+            IMyEntity entity;
+            IMyCubeGrid grid;
+            GateDataMessage gate;
+            if (message == null || !fromServer ||
+                    !MyAPIGateway.Entities.TryGetEntityById(message.GridId, out entity) ||
+                    (grid = entity as IMyCubeGrid) == null || !Gates.TryGetValue(message.GateId, out gate))
+                return;
+
+            MyLog.Default?.WriteLine($"Jump status update {message.Status}");
+            switch (message.Status)
+            {
+                case JumpStatus.Started:
+                    OnJumpStarted(gate, grid);
+                    break;
+                case JumpStatus.Ready:
+                    OnJumpReady(gate, grid);
+                    break;
+                case JumpStatus.Perform:
+                    OnJumpPerform(gate, grid, message.Destination);
+                    break;
+                case JumpStatus.Succeeded:
+                    OnJumpSucceeded(gate, grid);
+                    break;
+                default:
+                    throw new Exception("Out of Range");
+            }
+        }
+
+        private void GateDataHandler(ushort channel, byte[] data, ulong sender, bool fromServer)
+        {
+            var message = MyAPIGateway.Utilities.SerializeFromBinary<GatesMessage>(data);
+            if (message == null || !fromServer)
+                return;
+
+            MyLog.Default?.WriteLine($"Loaded {message.Messages} gates");
+            OnGatesData(message.Messages);
+            OnJdData(message.WormholeDriveIds, message.WorkWithAllJds);
+        }
+        #endregion
+
+        private void OnJumpStarted(GateDataMessage gate, IMyCubeGrid grid)
+        {
+            _gateVisuals.EnableEffectForGate(gate.Id);
+            _soundEmitter.Entity = (MyEntity)grid;
+            _soundEmitter.PlaySound(ChargeSound);
+        }
+
+        private void OnJumpReady(GateDataMessage gate, IMyCubeGrid grid)
+        {
+            _soundEmitter.PlaySound(JumpSound, true);
+        }
+        private void OnJumpPerform(GateDataMessage gate, IMyCubeGrid grid, Vector3D destination)
+        {
+            if (Vector3D.IsZero(destination)) return;
+            var matrix = grid.WorldMatrix;
+            matrix.Translation = destination;
+            grid.Teleport(matrix);
+        }
+
+        private void OnJumpSucceeded(GateDataMessage gate, IMyCubeGrid grid)
+        {
+            _gateVisuals.DisableEffectForGate(gate.Id);
+            if (MyAPIGateway.Session.ControlledObject is IMyShipController && ((IMyShipController)MyAPIGateway.Session.ControlledObject).CubeGrid == grid)
+                _soundEmitter.PlaySound(AfterSound, true);
+        }
+
+        private void OnGatesData(IEnumerable<GateDataMessage> gates)
+        {
+            Gates.Clear();
+            foreach (var gate in gates)
+            {
+                Gates[gate.Id] = gate;
+                _gateVisuals.CreateEffectForGate(gate);
+            }
+        }
+
+        private void OnJdData(IEnumerable<SerializableDefinitionId> definitionIds, bool workWithAllJds)
+        {
+            JdDefinitionIds.Clear();
+            JdDefinitionIds.AddRange(definitionIds);
+            WorkWithAllJds = workWithAllJds;
+        }
+    }
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <BlockVariantGroups>
+    <BlockVariantGroup>
+      <Id Type="MyObjectBuilder_BlockVariantGroup" Subtype="WormholeDriveGroup" />
+      <Icon>Textures\Icons\SouperJumpDrive.dds</Icon>
+      <DisplayName>Wormhole Stabilizer</DisplayName>
+      <Description>Stabilizes Wormhole to allow safe travel.</Description>
+      <Blocks>
+        <Block Type="MyObjectBuilder_JumpDrive" Subtype="WormholeDrive" />
+        <Block Type="MyObjectBuilder_JumpDrive" Subtype="WormholeDrive_Small" />
+      </Blocks>
+    </BlockVariantGroup>
+  </BlockVariantGroups>
+</Definitions>
